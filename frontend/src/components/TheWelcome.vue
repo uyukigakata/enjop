@@ -19,7 +19,7 @@
 
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn>
+      <v-btn onclick="location.href='/upload'" color="primary">
         使ってみる
       </v-btn>
     </v-card-actions>

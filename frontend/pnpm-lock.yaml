@@ -17,6 +17,9 @@ importers:
       vuetify:
         specifier: ^3.7.3
         version: 3.7.3(typescript@5.6.3)(vue@3.5.12(typescript@5.6.3))
+      vuex:
+        specifier: ^4.1.0
+        version: 4.1.0(vue@3.5.12(typescript@5.6.3))
     devDependencies:
       '@mdi/font':
         specifier: ^7.4.47
@@ -1572,6 +1575,11 @@ packages:
       webpack-plugin-vuetify:
         optional: true
 
+  vuex@4.1.0:
+    resolution: {integrity: sha512-hmV6UerDrPcgbSy9ORAtNXDr9M4wlNP4pEFKye4ujJF8oqgFFuxDCdOLS3eNoRTtq5O3hoBDh9Doj1bQMYHRbQ==}
+    peerDependencies:
+      vue: ^3.2.0
+
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
@@ -3085,6 +3093,11 @@ snapshots:
       vue: 3.5.12(typescript@5.6.3)
     optionalDependencies:
       typescript: 5.6.3
+
+  vuex@4.1.0(vue@3.5.12(typescript@5.6.3)):
+    dependencies:
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.12(typescript@5.6.3)
 
   which@2.0.2:
     dependencies:

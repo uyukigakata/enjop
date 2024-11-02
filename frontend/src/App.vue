@@ -19,7 +19,10 @@ import Footer from './components/Footer.vue'
     </v-toolbar>
   </header>
 
-  <RouterView />
+  <main>
+    <RouterView />
+  </main>
+
   <footer>
     <Footer></Footer>
   </footer>
