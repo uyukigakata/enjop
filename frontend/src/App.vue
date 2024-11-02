@@ -5,6 +5,21 @@ import HelloWorld from './components/HelloWorld.vue'
 
 <template>
   <header>
+    <v-toolbar color="primary" dark="true">
+      <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      <v-toolbar-title>Title</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+      <v-btn icon>
+        <v-icon>mdi-heart</v-icon>
+      </v-btn>
+      <v-btn icon>
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </v-toolbar>
+
     <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
 
     <div class="wrapper">
