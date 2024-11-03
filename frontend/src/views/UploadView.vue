@@ -22,7 +22,7 @@ const onFileChange = (e: any) => {
 
 <template>
     <div>
-        <h2 class="text-h2">動画をアップロード</h2>
+        <h4 class="text-h4">動画をアップロード</h4>
 
         <input type="file" @change="onFileChange" />
 
