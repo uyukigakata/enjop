@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 import os
-from .views import video_processing_blueprint  # 相対インポートに変更
+from .routes import video_processing_blueprint  # 相対インポートに変更
 
 
 def create_app():
