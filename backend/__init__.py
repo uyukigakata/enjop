@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
 import os
-from backend.firebase_config import db  # 絶対パスでインポート
 from .views import video_processing_blueprint  # 相対インポートに変更
 
 
