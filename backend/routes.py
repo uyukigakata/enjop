@@ -1,14 +1,20 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 import cv2
 from os import makedirs
-from os.path import splitext, basename, join
+from os.path import splitext, basename, join, exists
 from io import BytesIO
 import requests
 from .firebase_config import bucket, db
+from google.cloud import vision
 import os
 import shutil
+import base64
 
 video_processing_blueprint = Blueprint("video_processing", __name__)
+
+@video_processing_blueprint.route('/')
+def index():
+    return render_template('test_vue.html')
 
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
@@ -19,6 +25,7 @@ def process_video():
 
     # 動画ファイルを一時保存
     video_path = join("backend/video", file.filename)
+    makedirs("backend/video", exist_ok=True)
     file.save(video_path)
     
     # Firestoreのコレクション名とドキュメントIDの設定
@@ -44,10 +51,10 @@ def process_video():
         
     # 空のvideoディレクトリを削除
     try:
-        shutil.rmtree(video_path)  # ディレクトリとその中身を削除
-        print(f"{video_path} directory has been deleted from local storage.")
+        shutil.rmtree("backend/video")  # ディレクトリとその中身を削除
+        print(f"backend/video directory has been deleted from local storage.")
     except Exception as e:
-        print(f"Error deleting frame directory: {e}")
+        print(f"Error deleting video directory: {e}")
 
     # 成功メッセージを返す
     return jsonify({"message": "フレームが保存され、Firestorageにアップロードされました", "image_urls": image_urls})
@@ -79,10 +86,21 @@ def save_frames_and_upload(video_path: str, frame_dir: str, collection_name: str
             frame_filename = f"{join(frame_dir, name)}_{filled_idx}.{ext}"
             cv2.imwrite(frame_filename, frame)  # フレームを保存
 
+            # ファイルが存在するか確認
+            if not exists(frame_filename):
+                print(f"Error: {frame_filename} does not exist.")
+                continue
+
             # Firestorageにアップロードし、URLを取得
             image_url = upload_image_to_storage(collection_name, frame_filename, f"{splitext(basename(video_path))[0]}_{filled_idx}.{ext}")
             image_urls.append(image_url)  # URLをリストに追加
             
+            # Vision APIで画像分析
+            with open(frame_filename, "rb") as image_file:
+                image_data = base64.b64encode(image_file.read()).decode('utf-8')
+                analysis_result = analyze_image_with_vision(image_data)
+                print(f"Analysis result for frame {filled_idx}: {analysis_result}")
+
             os.remove(frame_filename)
             idx += 1
 
@@ -138,4 +156,56 @@ def fetch_image_from_url(url: str):
         return BytesIO(response.content)
     else:
         print(f"Failed to fetch image from {url}")
+        return None
+
+@video_processing_blueprint.route('/analyze_image', methods=['POST'])
+def analyze_image():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({"error": "ファイルがありません"}), 400
+
+    image_data = base64.b64encode(file.read()).decode('utf-8')
+    result = analyze_image_with_vision(image_data)
+    if result is None:
+        return jsonify({"error": "画像分析に失敗しました"}), 500
+
+    return jsonify(result)
+
+def analyze_image_with_vision(image_data: str) -> dict:
+    try:
+        client = vision.ImageAnnotatorClient()
+        image = vision.Image(content=image_data)
+
+        response = client.annotate_image({
+            'image': image,
+            'features': [
+                {'type_': vision.Feature.Type.LABEL_DETECTION},
+                {'type_': vision.Feature.Type.OBJECT_LOCALIZATION},
+                {'type_': vision.Feature.Type.TEXT_DETECTION}
+            ]
+        })
+
+        result = {
+            'labels': [{
+                'description': label.description,
+                'score': label.score,
+            } for label in response.label_annotations],
+
+            'objects': [{
+                'name': obj.name,
+                'confidence': obj.score,
+                'bounds': [[vertex.x, vertex.y] for vertex in obj.bounding_poly.normalized_vertices]
+            } for obj in response.localized_object_annotations],
+
+            'texts': [{
+                'text': text.description,
+                'confidence': text.confidence,
+                'bounds': [[vertex.x, vertex.y] for vertex in text.bounding_poly.vertices]
+            } for text in response.text_annotations]
+        }
+
+        return result
+
+    except Exception as e:
+        print(f"Error analyzing image: {str(e)}")
         return None

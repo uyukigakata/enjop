@@ -11,7 +11,7 @@ cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
 storageBucket =os.getenv('STORAGEBUCKET')
 
 firebase_admin.initialize_app(cred, {
-    "storageBucket":storageBucket  
+    "storageBucket":"sechack365forenjo.firebasestorage.app"
 })
 
 # Firebaseアプリの初期化
