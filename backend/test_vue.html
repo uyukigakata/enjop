@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Frame Extraction Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h2>動画をアップロードしてフレームを切り出す</h2>
+        <input type="file" @change="onFileChange" />
+        <button @click="uploadVideo">アップロードしてフレーム切り出し</button>
+        <p v-if="message">{{ message }}</p>
+    </div>
+
+    <script>
+        new Vue({
+            el: "#app",
+            data: {
+                selectedFile: null,
+                message: ""
+            },
+            methods: {
+                onFileChange(event) {
+                    this.selectedFile = event.target.files[0];
+                },
+                async uploadVideo() {
+                    if (!this.selectedFile) {
+                        this.message = "ファイルを選択してください。";
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append("file", this.selectedFile);
+
+                    try {
+                        const response = await axios.post("http://localhost:5000/api/process_video", formData, {
+                            headers: {
+                                "Content-Type": "multipart/form-data"
+                            }
+                        });
+                        this.message = response.data.message;
+                    } catch (error) {
+                        console.error("エラー:", error);
+                        this.message = "アップロードに失敗しました。";
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
