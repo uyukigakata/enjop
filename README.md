@@ -1,3 +1,4 @@
+
 # SecHack365_4C_enjo
 
 ### Google cloud (vision APIの環境設定)
@@ -26,3 +27,6 @@ venvの中身を生成（確認）
 
 他の環境で同じ依存データをインストールする方法
 >pip install -r requirements.txt
+=======
+# SecHack365_4C_enjo
+
