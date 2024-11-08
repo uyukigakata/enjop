@@ -1,17 +1,22 @@
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
-from .config import FIREBASE_CREDENTIALS_PATH
+#from .config import FIREBASE_CREDENTIALS_PATH
 import os
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
+
 # Firebaseの初期化
-cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
-storageBucket =os.getenv('STORAGEBUCKET')
+cred_path = os.getenv("GOOGLE_APPLICATION_FIREBASE")
+
+if not cred_path or not os.path.exists(cred_path):
+    raise FileNotFoundError(f"Firebase認証ファイルが見つからない")
+
+cred = credentials.Certificate(cred_path)
 
 firebase_admin.initialize_app(cred, {
-    "storageBucket":storageBucket  
+    "storageBucket": os.getenv("STORAGEBUCKET")
 })
 
 # Firebaseアプリの初期化
