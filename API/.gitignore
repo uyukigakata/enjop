@@ -2,4 +2,5 @@
 .env
 
 #サイズオーバー対策
-.mp4
+/model
+/movie
