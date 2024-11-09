@@ -1,2 +1,6 @@
 #firebase
 .env
+
+# Ignore __pycache__ and .pyc files
+__pycache__/
+*.pycgi
