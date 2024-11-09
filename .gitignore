@@ -1,3 +1,4 @@
+
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,flask,pycharm,intellij
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,flask,pycharm,intellij
 
@@ -381,4 +382,7 @@ fabric.properties
 
 
 # Virtual environment
+venv/
+=======
+#環境変数
 venv/

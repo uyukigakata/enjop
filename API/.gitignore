@@ -2,5 +2,7 @@
 .env
 
 #サイズオーバー対策
-/model
-/movie
+
+model/
+movie/
+
