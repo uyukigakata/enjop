@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,render_template
 from flask_cors import CORS
 import os
 from .routes import video_processing_blueprint  # 相対インポートに変更
@@ -18,8 +18,7 @@ def create_app():
     # シンプルなテストルートを定義
     @app.route('/')
     def index():
-        return 'Hello World!'
-
+        return render_template("./index.html")
     @app.route('/test')
     def test_route():
         return "テストページです！"
