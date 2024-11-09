@@ -1,5 +1,9 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # .envファイルを読み込み
 
 DEBUG = True
-# Firebaseのサービスアカウントキーのパス
-FIREBASE_CREDENTIALS_PATH = os.path.join(os.path.dirname(__file__), r"static\sechack365forenjo-firebase-adminsdk-lru89-c607120eac.json")
+# Firebaseのサービスアカウントキーのパスは .env ファイルから取得
+FIREBASE_CREDENTIALS_PATH = os.getenv("GOOGLE_APPLICATION_FIREBASE")
+STORAGE_BUCKET = os.getenv("STORAGEBUCKET")
