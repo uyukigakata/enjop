@@ -8,11 +8,11 @@ load_dotenv()
 # Vision APIクライアントの初期化
 client = vision.ImageAnnotatorClient()
 
-# 画像ファイルを読み込み
-def analyze_image(file_path):
-    with open(file_path, "rb") as image_file:
-        content = image_file.read()
-    image = vision.Image(content=content)
+# Cloud Storage上の画像を読み込み
+def analyze_image_gcs(gcs_uri):
+    # Cloud Storage URIを指定して画像を作成
+    image = vision.Image()
+    image.source.image_uri = gcs_uri
 
     # 安全検索のリクエストを送信
     response = client.safe_search_detection(image=image)
@@ -35,5 +35,6 @@ def analyze_image(file_path):
     print("不快なコンテンツ(Racy):", explain_rating("不快なコンテンツ", safe.racy))
     print("ドラッグ関連コンテンツ(Spoof):", explain_rating("ドラッグ関連コンテンツ", safe.spoof))
 
-# 画像ファイルのパスを指定
-analyze_image("C:/Users/yuu/Document/prpduct/SeckHack/SecHack365_4C_enjo/API/model/sushi.png")
+# Cloud Storageの画像ファイルのURIを指定
+gcs_uri = "gs://YOUR_BUCKET_NAME/YOUR_IMAGE_PATH"  # Cloud StorageのURI形式に置き換えてください
+analyze_image_gcs(gcs_uri)

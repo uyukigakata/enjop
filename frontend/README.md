@@ -21,6 +21,7 @@ curl -fsSL https://get.pnpm.io/install.sh | sh -
 ```bash
 pnpm install
 pnpm install vuex
+pnpm install axios
 # Run Development Server
 
 

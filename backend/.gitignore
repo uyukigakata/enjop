@@ -4,3 +4,7 @@
 # Ignore __pycache__ and .pyc files
 __pycache__/
 *.pycgi
+
+#一時動画、画像保管フォルダ
+video/
+frame/
