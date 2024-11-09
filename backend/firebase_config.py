@@ -6,14 +6,11 @@ from backend.config import FIREBASE_CREDENTIALS_PATH, STORAGE_BUCKET
 
 
 # Firebaseの初期化
-if not FIREBASE_CREDENTIALS_PATH or not os.path.exists(FIREBASE_CREDENTIALS_PATH):
-    raise FileNotFoundError(f"Firebase認証ファイルが見つからない")
-
-cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
-
-firebase_admin.initialize_app(cred, {
-    "storageBucket": STORAGE_BUCKET
-})
+if not firebase_admin._apps:  # 既に初期化されているかどうかを確認
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+    firebase_admin.initialize_app(cred, {
+        "storageBucket": STORAGE_BUCKET
+    })
 
 # Firebaseアプリの初期化
 db = firestore.client()
