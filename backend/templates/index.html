@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>炎上検知デモ</title>
+</head>
+<body>
+    <h1>炎上検知デモ</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="videoFile">動画ファイルを選択してください：</label>
+        <input type="file" id="videoFile" name="file" accept="video/*">
+        <button type="button" onclick="uploadVideo()">アップロードして分析</button>
+    </form>
+
+    <div id="results"></div>
+    <script>
+        function uploadVideo() {
+            var formData = new FormData(document.getElementById('uploadForm'));
+            fetch('/api/process_video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                // ドキュメントIDを取得
+                var doc_id = data.doc_id;
+                // 画像分析を実行
+                fetch('/api/analyze_images/' + doc_id)
+                .then(response => response.json())
+                .then(analysisResults => {
+                    var resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '';  // 既存の結果をクリア
+                    analysisResults.forEach(result => {
+                        var p = document.createElement('p');
+                        p.textContent = 'URL: ' + result.url + ', 成人コンテンツ: ' + result.safe_search.adult + ', 暴力コンテンツ: ' + result.safe_search.violence;
+                        resultsDiv.appendChild(p);
+                    });
+                })
+                .catch(error => console.error('画像分析エラー:', error));
+            })
+            .catch(error => console.error('動画アップロードエラー:', error));
+        }
+    </script>
+</body>
+</html>

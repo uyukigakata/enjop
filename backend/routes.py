@@ -1,13 +1,13 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 import cv2
 from os import makedirs
 from os.path import splitext, basename, join
 from io import BytesIO
+from google.cloud import vision
 import requests
 from .firebase_config import bucket, db
 import os
 import shutil
-from flask import Blueprint, jsonify
 from google.cloud import firestore
 
 
@@ -15,42 +15,59 @@ video_processing_blueprint = Blueprint("video_processing", __name__)
 
 # Firestore クライアントの初期化
 firestore_client = firestore.Client()
+vision_client = vision.ImageAnnotatorClient()
+basedir = os.path.abspath(os.path.dirname(__file__))
+# backend/routes.py
 
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
-    # フロントエンドから送信されたファイルを取得
-    file = request.files.get("file")
-    if not file:
-        return jsonify({"error": "ファイルがありません"}), 400
-
-    # 動画ファイルを一時保存
-    video_path = join("backend/video", file.filename)
-    file.save(video_path)
-    
-    # Firestoreのコレクション名とドキュメントIDの設定
-    collection_name = "frame"  
-    doc_id = splitext(basename(video_path))[0]  # ドキュメントIDとして動画名の拡張子なし部分を使用
-
-    # フレームを切り出し、Firestorageにアップロードし、URLをFirestoreに保存
-    frame_dir = "backend/frame"
-    image_urls = save_frames_and_upload(video_path, frame_dir, collection_name, doc_id)
-    
-    # 処理が完了した後に動画ファイルを削除
     try:
-        os.remove(video_path)
-        print(f"{video_path} has been deleted from local storage.")
+        # フロントエンドから送信されたファイルを取得
+        file = request.files.get("file")
+        if not file:
+            return jsonify({"error": "ファイルがありません"}), 400
+
+        # 動画ファイルを一時保存するディレクトリ
+        video_dir = join(basedir, "video")
+        os.makedirs(video_dir, exist_ok=True)
+
+        # 動画ファイルの保存パス
+        video_path = join(video_dir, file.filename)
+        file.save(video_path)
+        print(f"動画ファイルを保存しました: {video_path}")
+
+        # Firestoreのコレクション名とドキュメントIDの設定
+        collection_name = "frame"  
+        doc_id = splitext(basename(video_path))[0]  # ドキュメントIDとして動画名の拡張子なし部分を使用
+
+        # フレームを切り出し、Firestorageにアップロードし、URLをFirestoreに保存
+        frame_dir = join(basedir, "frame")
+        os.makedirs(frame_dir, exist_ok=True)
+        image_urls = save_frames_and_upload(video_path, frame_dir, collection_name, doc_id)
+
+        # 処理が完了した後に動画ファイルを削除
+        try:
+            os.remove(video_path)
+            print(f"{video_path} をローカルストレージから削除しました。")
+        except Exception as e:
+            print(f"動画ファイルの削除エラー: {e}")
+
+        try:
+            shutil.rmtree(frame_dir)  # frameディレクトリとその中身を削除
+            print(f"{frame_dir} ディレクトリをローカルストレージから削除しました。")
+        except Exception as e:
+            print(f"frameディレクトリの削除エラー: {e}")
+
+        # 成功メッセージと doc_id を返す
+        return jsonify({
+            "message": "フレームが保存され、Firestorageにアップロードされました",
+            "doc_id": doc_id,
+            "image_urls": image_urls
+        }), 200
+
     except Exception as e:
-        print(f"Error deleting video file: {e}")
-
-    try:
-        shutil.rmtree(frame_dir)  # frameディレクトリとその中身を削除
-        print(f"{frame_dir} directory has been deleted from local storage.")
-    except Exception as e:
-        print(f"Error deleting frame directory: {e}")
-
-    # 成功メッセージを返す
-    return jsonify({"message": "フレームが保存され、Firestorageにアップロードされました", "image_urls": image_urls})
-
+        print(f"動画処理中にエラーが発生しました: {e}")
+        return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
 # 動画からフレームを切り出して、Firestorageにアップロードし、URLをFirestoreに保存
 def save_frames_and_upload(video_path: str, frame_dir: str, collection_name: str, doc_id: str, name="image", ext="jpg"):
     cap = cv2.VideoCapture(video_path)
@@ -132,21 +149,55 @@ def get_marker_from_firestore(collection_name: str, doc_id: str):
 
 # URLから画像データを取得
 def fetch_image_from_url(url: str):
-    response = requests.get(url)
-    if response.status_code == 200:
-        return BytesIO(response.content)
-    else:
-        print(f"Failed to fetch image from {url}")
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return BytesIO(response.content)
+        else:
+            print(f"URLから画像を取得できませんでした: {url}")
+            return None
+    except Exception as e:
+        print(f"画像取得エラー ({url}): {e}")
         return None
 
 
-#google cloud APIで炎上検知を行った場合
-@video_processing_blueprint.route("/get_analysis_results", methods=["GET"])
-def get_analysis_results():
-    collection_ref = db.collection("image_analysis_results")
-    docs = collection_ref.stream()
-    results = [doc.to_dict() for doc in docs]
-    
-    for doc in docs:
-        results.append(doc.to_dict())
-    return jsonify(results)
+# google cloud APIで炎上検知を行った場合
+
+@video_processing_blueprint.route("/analyze_images/<doc_id>", methods=["GET"])
+def analyze_images(doc_id):
+    try:
+        # Firestoreから画像URLリストを取得
+        data = get_marker_from_firestore("frame", doc_id)
+        if data and "images" in data:
+            image_urls = data["images"]
+        else:
+            return jsonify({"image_urls": []}), 404
+
+        analysis_results = []
+
+        for url in image_urls:
+            # URLから画像データを取得
+            image_data = fetch_image_from_url(url)
+            if image_data:
+                # Vision APIで画像を分析
+                image = vision.Image(content=image_data.read())
+                response = vision_client.safe_search_detection(image=image)
+                safe_search = response.safe_search_annotation
+
+                result = {
+                    "url": url,
+                    "safe_search": {
+                        "adult": safe_search.adult,
+                        "violence": safe_search.violence,
+                        # 必要に応じて他の属性を追加
+                    }
+                }
+                analysis_results.append(result)
+            else:
+                print(f"Failed to fetch image from {url}")
+
+        return jsonify(analysis_results), 200
+
+    except Exception as e:
+        print(f"画像分析中にエラーが発生しました: {e}")
+        return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
