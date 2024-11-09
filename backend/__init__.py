@@ -21,7 +21,7 @@ def create_app():
         return 'Hello World!'
 
     @app.route('/test')
-    def other1():
+    def test_route():
         return "テストページです！"
 
     return app

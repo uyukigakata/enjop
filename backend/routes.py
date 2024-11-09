@@ -41,13 +41,6 @@ def process_video():
         print(f"{frame_dir} directory has been deleted from local storage.")
     except Exception as e:
         print(f"Error deleting frame directory: {e}")
-        
-    # 空のvideoディレクトリを削除
-    try:
-        shutil.rmtree(video_path)  # ディレクトリとその中身を削除
-        print(f"{video_path} directory has been deleted from local storage.")
-    except Exception as e:
-        print(f"Error deleting frame directory: {e}")
 
     # 成功メッセージを返す
     return jsonify({"message": "フレームが保存され、Firestorageにアップロードされました", "image_urls": image_urls})
@@ -88,7 +81,7 @@ def save_frames_and_upload(video_path: str, frame_dir: str, collection_name: str
 
         frame_count += 1
 
-    cap.release()
+    cap.release()  # 処理終了後にファイルを解放
     print("Frames have been saved and uploaded to Firestorage.")
 
     # Firestoreに画像URLリストを保存

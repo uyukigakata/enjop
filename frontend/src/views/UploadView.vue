@@ -1,24 +1,43 @@
-
 <script setup lang="ts">
-import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+import axios from 'axios'
 
-const store = useStore()
-const router = useRouter()
+const file = ref<File | null>(null) // ファイルの状態を管理
 
-const onFileChange = (e: any) => {
-    const file = e.target.files[0]
-    const reader = new FileReader()
-
-    reader.onload = (e: any) => {
-        const video = e.target.result
-        store.dispatch('uploadVideo', { video })
-        router.push('/upload')
+// ファイル選択時に呼び出される関数
+const onFileChange = (e: Event) => {
+    const target = e.target as HTMLInputElement
+    if (target && target.files && target.files.length > 0) {
+        file.value = target.files[0] // ファイルを設定
     }
-
-    reader.readAsDataURL(file)
 }
 
+// アップロード関数
+const uploadVideo = async () => {
+    if (!file.value) {
+        alert("ファイルが選択されていません")
+        return
+    }
+
+    // FormDataを使用してファイルを送信
+    const formData = new FormData()
+    formData.append("file", file.value)
+
+    try {
+        // axiosでバックエンドのエンドポイントにファイルをPOST
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/process_video`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        })
+        console.log("アップロード成功:", response.data)
+        alert("動画が正常にアップロードされました。")
+
+    } catch (error) {
+        console.error("アップロードエラー:", error)
+        alert("動画のアップロードに失敗しました。")
+    }
+}
 </script>
 
 <template>
@@ -27,8 +46,7 @@ const onFileChange = (e: any) => {
 
         <input type="file" @change="onFileChange" />
 
-        <v-btn @click="router.push('/upload')" variant="elevated">アップロード</v-btn>
-
+        <v-btn @click="uploadVideo" variant="elevated">アップロード</v-btn>
     </div>
 </template>
 
