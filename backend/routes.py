@@ -189,6 +189,8 @@ def analyze_images(doc_id):
                     "safe_search": {
                         "adult": safe_search.adult,
                         "violence": safe_search.violence,
+                        "racy": safe_search.racy,
+
                         # 必要に応じて他の属性を追加
                     }
                 }

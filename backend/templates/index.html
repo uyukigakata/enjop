@@ -36,7 +36,10 @@
                     resultsDiv.innerHTML = '';  // 既存の結果をクリア
                     analysisResults.forEach(result => {
                         var p = document.createElement('p');
-                        p.textContent = 'URL: ' + result.url + ', 成人コンテンツ: ' + result.safe_search.adult + ', 暴力コンテンツ: ' + result.safe_search.violence;
+                        p.textContent = 'URL: ' + result.url + 
+                        ', 成人コンテンツ: ' + result.safe_search.adult + 
+                        ', 暴力コンテンツ: ' + result.safe_search.violence +
+                        ', 卑猥なコンテンツ: ' + result.safe_search.racy;
                         resultsDiv.appendChild(p);
                     });
                 })
