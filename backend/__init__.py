@@ -9,7 +9,7 @@ def create_app():
     CORS(app)  # CORSを有効化
 
     # config.py を直接パスで指定
-    app.config.from_pyfile(os.path.join(os.path.dirname(__file__), 'firebase_config.py'))
+    app.config.from_pyfile(os.path.join(os.path.dirname(__file__), 'config.py'))
     
     # Blueprintの登録
     app.register_blueprint(video_processing_blueprint, url_prefix="/api")

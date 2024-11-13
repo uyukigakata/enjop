@@ -13,6 +13,7 @@
     </form>
 
     <div id="results"></div>
+
     <script>
         function uploadVideo() {
             var formData = new FormData(document.getElementById('uploadForm'));
@@ -26,22 +27,40 @@
                     alert(data.error);
                     return;
                 }
-                // ドキュメントIDを取得
                 var doc_id = data.doc_id;
-                // 画像分析を実行
+
                 fetch('/api/analyze_images/' + doc_id)
                 .then(response => response.json())
-                .then(analysisResults => {
+                .then(result => {
                     var resultsDiv = document.getElementById('results');
                     resultsDiv.innerHTML = '';  // 既存の結果をクリア
-                    analysisResults.forEach(result => {
-                        var p = document.createElement('p');
-                        p.textContent = 'URL: ' + result.url + 
-                        ', 成人コンテンツ: ' + result.safe_search.adult + 
-                        ', 暴力コンテンツ: ' + result.safe_search.violence +
-                        ', 卑猥なコンテンツ: ' + result.safe_search.racy;
-                        resultsDiv.appendChild(p);
-                    });
+
+                    // 高リスクフレームの表示
+                    var highRiskFrames = result.high_risk_frames;
+                    if (highRiskFrames.length > 0) {
+                        var highRiskHeading = document.createElement('h2');
+                        highRiskHeading.textContent = "高リスクフレーム:";
+                        resultsDiv.appendChild(highRiskHeading);
+
+                        highRiskFrames.forEach(frame => {
+                            var frameParagraph = document.createElement('p');
+                            frameParagraph.textContent = frame + "において炎上リスクが高いコンテンツが検出されました。";
+                            resultsDiv.appendChild(frameParagraph);
+                        });
+                    } else {
+                        var noRiskParagraph = document.createElement('p');
+                        noRiskParagraph.textContent = "高リスクフレームは検出されませんでした。";
+                        resultsDiv.appendChild(noRiskParagraph);
+                    }
+
+                    // OpenAIによる炎上リスク評価
+                    var assessmentHeading = document.createElement('h2');
+                    assessmentHeading.textContent = "総合的な炎上リスク評価:";
+                    resultsDiv.appendChild(assessmentHeading);
+
+                    var assessmentParagraph = document.createElement('p');
+                    assessmentParagraph.textContent = result.openai_risk_assessment;
+                    resultsDiv.appendChild(assessmentParagraph);
                 })
                 .catch(error => console.error('画像分析エラー:', error));
             })
