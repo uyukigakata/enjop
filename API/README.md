@@ -1,32 +1,42 @@
-
 # SecHack365_4C_enjo
 
-### Google cloud (vision APIの環境設定)
->pip install google-cloud-vision
+## APIの設定
 
-### visionAPIの環境変数
+### Google cloud API visionAPI、speech-to-textの環境変数作成
+```bash
+GOOGLE_APPLICATION_CREDENTIALS ="path\to\your-service-account-file.json"
+```
 
-.envファイル作成
->GOOGLE_APPLICATION_CREDENTIALS ="path\to\your-service-account-file.json"
+### Open APIの環境変数作成
+```bash
+OPENAI_API_KEY = "APIキー"
+```
 
+### 仮想環境作成方法
 
-### 仮想環境
->python -m venv venv
+```bash
+python -m venv venv
+```
 
 ### パッケージインストール
-
->pip install google-cloud-vision 
->pip install google-cloud-speech
->pip install python-dotenv 
->pip install opencv-python
+```bash
+pip install google-cloud-vision 
+pip install google-cloud-speech
+pip install python-dotenv 
+pip install openai
+```
 
 ### 仮想環境を取り込む
 
 venvの中身を生成（確認）
->pip freeze > requirements.txt
+```bash
+pip freeze > requirements.txt
+```
 
 他の環境で同じ依存データをインストールする方法
->pip install -r requirements.txt
-=======
+```bash
+pip install -r requirements.txt
+```
+
 # SecHack365_4C_enjo
 
