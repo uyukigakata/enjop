@@ -57,6 +57,7 @@ const handleFileUpload = async (e: Event) => {
         総合的な炎上リスク評価
       </h3>
       <p>{{ results.openai_risk_assessment }}</p>
+      <div class="mt-12"></div>
     </div>
 
 
