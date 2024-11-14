@@ -1,71 +1,20 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>炎上検知デモ</title>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecHack365 Team 4C Frontend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-cPACsEGg.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-fkc_b9gc.css">
 </head>
+
 <body>
-    <h1>炎上検知デモ</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="videoFile">動画ファイルを選択してください：</label>
-        <input type="file" id="videoFile" name="file" accept="video/*">
-        <button type="button" onclick="uploadVideo()">アップロードして分析</button>
-    </form>
-
-    <div id="results"></div>
-
-    <script>
-        function uploadVideo() {
-            var formData = new FormData(document.getElementById('uploadForm'));
-            fetch('/api/process_video', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                var doc_id = data.doc_id;
-
-                fetch('/api/analyze_images/' + doc_id)
-                .then(response => response.json())
-                .then(result => {
-                    var resultsDiv = document.getElementById('results');
-                    resultsDiv.innerHTML = '';  // 既存の結果をクリア
-
-                    // 高リスクフレームの表示
-                    var highRiskFrames = result.high_risk_frames;
-                    if (highRiskFrames.length > 0) {
-                        var highRiskHeading = document.createElement('h2');
-                        highRiskHeading.textContent = "高リスクフレーム:";
-                        resultsDiv.appendChild(highRiskHeading);
-
-                        highRiskFrames.forEach(frame => {
-                            var frameParagraph = document.createElement('p');
-                            frameParagraph.textContent = frame + "において炎上リスクが高いコンテンツが検出されました。";
-                            resultsDiv.appendChild(frameParagraph);
-                        });
-                    } else {
-                        var noRiskParagraph = document.createElement('p');
-                        noRiskParagraph.textContent = "高リスクフレームは検出されませんでした。";
-                        resultsDiv.appendChild(noRiskParagraph);
-                    }
-
-                    // OpenAIによる炎上リスク評価
-                    var assessmentHeading = document.createElement('h2');
-                    assessmentHeading.textContent = "総合的な炎上リスク評価:";
-                    resultsDiv.appendChild(assessmentHeading);
-
-                    var assessmentParagraph = document.createElement('p');
-                    assessmentParagraph.textContent = result.openai_risk_assessment;
-                    resultsDiv.appendChild(assessmentParagraph);
-                })
-                .catch(error => console.error('画像分析エラー:', error));
-            })
-            .catch(error => console.error('動画アップロードエラー:', error));
-        }
-    </script>
+  <div id="app"></div>
 </body>
+
 </html>

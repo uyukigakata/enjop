@@ -1,8 +1,7 @@
-from flask import Flask,render_template
+from flask import Flask,render_template,send_from_directory
 from flask_cors import CORS
 import os
 from .routes import video_processing_blueprint  # 相対インポートに変更
-
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +18,12 @@ def create_app():
     @app.route('/')
     def index():
         return render_template("./index.html")
+    # assets フォルダの中身を返すルートを定義
+    def send_assets(folder, filename, **kwargs):
+        return send_from_directory(folder, filename, **kwargs)
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_assets('./', 'favicon.ico')
     @app.route('/test')
     def test_route():
         return "テストページです！"
