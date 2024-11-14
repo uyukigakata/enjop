@@ -1,61 +1,74 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import axios from 'axios'
+import { ref } from 'vue';
+import axios from 'axios';
 
-const file = ref<File | null>(null) // ファイルの状態を管理
+type AnalysisResult = {
+  high_risk_frames: string[];
+  openai_risk_assessment: string;
+};
 
-// ファイル選択時に呼び出される関数
-const onFileChange = (e: Event) => {
-    const target = e.target as HTMLInputElement
-    if (target && target.files && target.files.length > 0) {
-        file.value = target.files[0] // ファイルを設定
+const results = ref(null as AnalysisResult | null);
+
+const handleFileUpload = async (e: Event) => {
+  const target = (<HTMLInputElement>e.target)
+  if (!target.files) {
+    return;
+  }
+  const file = target.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await axios.post(`/api/process_video`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    if (response.data.error) {
+      alert(response.data.error);
+      return;
     }
-}
 
-// アップロード関数
-const uploadVideo = async () => {
-    if (!file.value) {
-        alert("ファイルが選択されていません")
-        return
-    }
+    const docId = response.data.doc_id;
 
-    // FormDataを使用してファイルを送信
-    const formData = new FormData()
-    formData.append("file", file.value)
-
-    try {
-        // axiosでバックエンドのエンドポイントにファイルをPOST
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/process_video`, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        })
-        console.log("アップロード成功:", response.data)
-        alert("動画が正常にアップロードされました。")
-
-    } catch (error) {
-        console.error("アップロードエラー:", error)
-        alert("動画のアップロードに失敗しました。")
-    }
-}
+    const analysisResponse = await axios.get(`/api/analyze_images/${docId}`);
+    results.value = analysisResponse.data;
+  } catch (error) {
+    console.error(error);
+    // エラー処理
+  }
+};
 </script>
 
+
 <template>
-    <div>
-        <h4 class="text-h4">動画をアップロード</h4>
+  <div>
+    <h4 class="text-h3 mt-8">炎上検知デモ</h4>
 
-        <input type="file" @change="onFileChange" />
+    <input type="file" @change="handleFileUpload" class="mt-6" />
+    <div v-if="results">
+      <h4 class="text-h4 mt-8">分析結果</h4>
 
-        <v-btn @click="uploadVideo" variant="elevated">アップロード</v-btn>
+      <h3 class="mt-4">高リスクフレーム:</h3>
+      <div v-for="result in results.high_risk_frames" :key="result">
+        <p>{{ result }}において炎上リスクが高いコンテンツが検出されました。</p>
+      </div>
+      <h3 class="mt-4">
+        総合的な炎上リスク評価
+      </h3>
+      <p>{{ results.openai_risk_assessment }}</p>
     </div>
+
+
+  </div>
 </template>
 
 <style>
 @media (min-width: 1024px) {
-    .about {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-    }
+  .about {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+  }
 }
 </style>
