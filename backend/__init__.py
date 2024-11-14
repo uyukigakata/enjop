@@ -19,6 +19,7 @@ def create_app():
     def index():
         return render_template("./index.html")
     # assets フォルダの中身を返すルートを定義
+    @app.route('/assets/<path:filename>')
     def send_assets(folder, filename, **kwargs):
         return send_from_directory(folder, filename, **kwargs)
     @app.route('/favicon.ico')
