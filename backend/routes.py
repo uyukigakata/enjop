@@ -72,6 +72,60 @@ def analyze_images(doc_id):
     try:
         data = get_marker_from_firestore("frame", doc_id)
         if not data or "images" not in data:
+            return jsonify({"image_urls": [], "high_risk_frames": [], "openai_risk_assessment": ""}), 404
+
+        analysis_results = []
+        high_risk_frames = []
+        cloudAPI_results = []
+
+        for idx, url in enumerate(data["images"]):
+            image_data = fetch_image_from_url(url)
+            if image_data:
+                image = vision.Image(content=image_data.read())
+                response = vision_client.safe_search_detection(image=image)
+                safe_search = response.safe_search_annotation
+
+                safe_search_result = {
+                    "adult": safe_search.adult,
+                    "violence": safe_search.violence,
+                    "racy": safe_search.racy
+                }
+                analysis_results.append(safe_search_result)
+
+                if any(value >= 4 for value in safe_search_result.values()):
+                    high_risk_frames.append(f"{idx+1}秒時点のフレーム")
+                
+                cloudAPI_results.append(f"{idx+1}秒: 成人={safe_search_result['adult']}, 暴力={safe_search_result['violence']}, 卑猥={safe_search_result['racy']}")
+
+        summary_prompt = (
+            f"動画の各フレームを解析した結果、高リスクと判断されたフレームは以下の通りです：{', '.join(high_risk_frames)}。"
+            f"\nセーフサーチ結果は以下です:\n{chr(10).join(cloudAPI_results)}\n"
+            "総合的な炎上リスクを評価してください。"
+        )
+        
+        openai_response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "炎上リスクを判定してください。"},
+                {"role": "user", "content": summary_prompt},
+            ],
+            max_tokens=500
+        )
+
+        result = {
+            "image_urls": data["images"],  # 画像URLリストを追加
+            "high_risk_frames": high_risk_frames,
+            "openai_risk_assessment": openai_response.choices[0].message['content'].strip()
+        }
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"画像分析中にエラーが発生しました: {e}")
+        return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
+
+    try:
+        data = get_marker_from_firestore("frame", doc_id)
+        if not data or "images" not in data:
             return jsonify({"image_urls": []}), 404
 
         analysis_results = []
