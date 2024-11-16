@@ -5,6 +5,7 @@ import axios from 'axios';
 type AnalysisResult = {
   high_risk_frames: string[];
   openai_risk_assessment: string;
+  image_urls:string;
 };
 
 const results = ref(null as AnalysisResult | null);
@@ -49,20 +50,25 @@ const handleFileUpload = async (e: Event) => {
     <div v-if="results">
       <h4 class="text-h4 mt-8">分析結果</h4>
 
+      <!-- 画像表示 -->
+      <h3 class="mt-4">読み取った画像:</h3>
+      <div v-for="(url, index) in results.image_urls" :key="index" class="image-container">
+        <img :src="url" :alt="'Image ' + (index + 1)" style="width: 200px; height: auto;" />
+      </div>
+
+      <!-- 高リスクフレーム -->
       <h3 class="mt-4">高リスクフレーム:</h3>
       <div v-for="result in results.high_risk_frames" :key="result">
         <p>{{ result }}において炎上リスクが高いコンテンツが検出されました。</p>
       </div>
-      <h3 class="mt-4">
-        総合的な炎上リスク評価
-      </h3>
+
+      <!-- 総合的な炎上リスク評価 -->
+      <h3 class="mt-4">総合的な炎上リスク評価:</h3>
       <p>{{ results.openai_risk_assessment }}</p>
-      <div class="mt-12"></div>
     </div>
-
-
   </div>
 </template>
+
 
 <style>
 @media (min-width: 1024px) {

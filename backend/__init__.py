@@ -15,18 +15,14 @@ def create_app():
 
 
     # シンプルなテストルートを定義
-    @app.route('/')
-    def index():
-        return render_template("./index.html")
-    # assets フォルダの中身を返すルートを定義
-    @app.route('/assets/<path:filename>')
-    def send_assets(folder, filename, **kwargs):
-        return send_from_directory(folder, filename, **kwargs)
-    @app.route('/favicon.ico')
-    def favicon():
-        return send_assets('./', 'favicon.ico')
-    @app.route('/test')
-    def test_route():
-        return "テストページです！"
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def index(path):
+        return render_template("index.html")
+    
+    # assets ディレクトリのファイルを返すルートを定義
+    @app.route('/assets/<path:path>')
+    def send_assets(path):
+        return send_from_directory(os.path.join(app.root_path, 'templates/assets'), path)
 
     return app
