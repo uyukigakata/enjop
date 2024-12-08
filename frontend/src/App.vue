@@ -23,10 +23,6 @@ import Footer from './components/Footer.vue'
     <RouterView />
   </main>
 
-  <footer>
-    <Footer></Footer>
-  </footer>
-
 </template>
 
 <style scoped>

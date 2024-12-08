@@ -1,8 +1,7 @@
-from flask import Flask
+from flask import Flask,render_template,send_from_directory
 from flask_cors import CORS
 import os
 from .routes import video_processing_blueprint  # 相対インポートに変更
-
 
 def create_app():
     app = Flask(__name__)
@@ -16,12 +15,14 @@ def create_app():
 
 
     # シンプルなテストルートを定義
-    @app.route('/')
-    def index():
-        return 'Hello World!'
-
-    @app.route('/test')
-    def other1():
-        return "テストページです！"
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def index(path):
+        return render_template("index.html")
+    
+    # assets ディレクトリのファイルを返すルートを定義
+    @app.route('/assets/<path:path>')
+    def send_assets(path):
+        return send_from_directory(os.path.join(app.root_path, 'templates/assets'), path)
 
     return app
