@@ -68,7 +68,6 @@ def process_video():
         return jsonify({
             "message": "フレームと音声の文字起こしが保存されました",
             "image_paths": image_paths,
-            "transcription": transcription
         }), 200
 
     except Exception as e:
