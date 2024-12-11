@@ -386,3 +386,5 @@ venv/
 =======
 #環境変数
 venv/
+ollama.tgz
+bin/ollama
