@@ -8,7 +8,9 @@ import openai
 import os
 import shutil
 import base64
+import json
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
+
 
 # OpenAI APIキーの設定
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -34,14 +36,18 @@ def fetch_image_from_url(url: str):
 def transcribe_audio(video_path):
     "動画の音声を文字起こしする関数"
     audio_path = join(basedir, "audio.wav")
-    command = f"ffmpeg -i {video_path} -q:a 0 -map a {audio_path}"
+    command = f"ffmpeg -i {video_path} -q:a 0 -map a {audio_path}"  # 動画から音声を抽出してWAV形式に保存
     os.system(command)
 
     audio = audio_from_path(audio_path)
-    transcription =transcribe(model, audio)
+    transcription = transcribe(model, audio)
+    
+    # transcription オブジェクトからテキストを抽出
+    transcription_text = transcription.text  # ここで transcription_text を定義
+    print(transcription_text)
     
     os.remove(audio_path)
-    return transcription
+    return transcription_text
 
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
@@ -56,24 +62,32 @@ def process_video():
         file.save(video_path)
         print(f"動画ファイルを保存しました: {video_path}")
 
+        # フレームを保存
         frame_dir = join(basedir, "frame")
         os.makedirs(frame_dir, exist_ok=True)
         image_paths = save_frames(video_path, frame_dir)
 
-        transcription = transcribe_audio(video_path)
+        # 音声を文字起こし
+        transcription_text = transcribe_audio(video_path)
 
+        # 画像分析を実行
+        analysis_response = requests.post(
+            "http://localhost:5000/api/analyze_images",
+            json={"image_paths": image_paths, "transcription": transcription_text}
+        )
+
+        # 不要なファイルとフォルダを削除
         os.remove(video_path)
         shutil.rmtree(frame_dir)
 
-        return jsonify({
-            "message": "フレームと音声の文字起こしが保存されました",
-            "image_paths": image_paths,
-        }), 200
+        if analysis_response.status_code == 200:
+            return jsonify(analysis_response.json()), 200
+        else:
+            return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
 
     except Exception as e:
         print(f"動画処理中にエラーが発生しました: {e}")
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
-
 def encode_image(image_path):
     "画像をbase64にエンコードする関数"
     with open(image_path, "rb") as image_file:
@@ -85,7 +99,7 @@ def analyze_image_with_ollama(image_path):
 
     data = {
         'model': 'llava',
-        'prompt': 'Please briefly describe what you see in this image.',
+        'prompt': 'List the elements on the screen, paying special attention to those that do not comply with Japanese law and those that pose a risk of flame wars. In short sentences.',
         'images': [base64_image]
     }
 
@@ -166,7 +180,7 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
         if not ret:
             break
 
-        if frame_count % int(fps) == 0:
+        if frame_count % int(2*fps) == 0:
             filled_idx = str(idx).zfill(4)
             frame_filename = f"{join(frame_dir, name)}_{filled_idx}.{ext}"
             cv2.imwrite(frame_filename, frame)
@@ -177,4 +191,4 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
 
     cap.release()
     print("Frames have been saved.")
-    return image_paths
+    return image_paths  # 追加
