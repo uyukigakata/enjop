@@ -34,7 +34,7 @@ def fetch_image_from_url(url: str):
         return None
 
 def transcribe_audio(video_path):
-    "動画の音声を文字起こしする関数"
+    # 動画の音声を文字起こしする関数
     audio_path = join(basedir, "audio.wav")
     command = f"ffmpeg -i {video_path} -q:a 0 -map a {audio_path}"  # 動画から音声を抽出してWAV形式に保存
     os.system(command)
@@ -73,7 +73,10 @@ def process_video():
         # 画像分析を実行
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
-            json={"transcription": transcription_text}
+                 json={
+                    "image_paths": image_paths,         # image_paths を追加
+                    "transcription": transcription_text
+    }
         )
 
         # 不要なファイルとフォルダを削除
@@ -94,7 +97,7 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 def analyze_image_with_ollama(image_path):
-    "ollamaのllavaを用いて、画像を説明させる関数"
+    # ollamaのllavaを用いて、画像を説明させる関数
     base64_image = encode_image(image_path)
 
     data = {
@@ -126,18 +129,23 @@ def analyze_image_with_ollama(image_path):
 def analyze_images():
     try:
         transcription = request.json.get("transcription", "")
+        image_paths = request.json.get("image_paths", [])
+        
         if not transcription:
             return jsonify({"error": "文字起こし結果がありません"}), 400
-
-        frame_dir = join(basedir, "frame", splitext(basename(video_path))[0])
-        if not os.path.exists(frame_dir):
-            return jsonify({"error": "フレームディレクトリが存在しません"}), 400
+        
+        if not image_paths:
+            return jsonify({"error": "画像パスがありません"}), 400
 
         analysis_results = []
-        for idx, image_file in enumerate(os.listdir(frame_dir)):
-            image_path = join(frame_dir, image_file)
+        for idx, image_path in enumerate(image_paths):
+            if not os.path.exists(image_path):
+                continue
             ollama_result = analyze_image_with_ollama(image_path)
             analysis_results.append(f"{idx+1}秒: {ollama_result}")
+
+        if not analysis_results:
+            return jsonify({"error": "有効な画像が見つかりません"}), 400
 
         summary_prompt = (
             f"Ollamaの結果は以下です:\n{chr(10).join(analysis_results)}\n"
@@ -145,25 +153,25 @@ def analyze_images():
             "総合的な炎上リスクを評価してください。"
         )
         
+        print(openai.api_key)  # APIキーを確認
         openai_response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "炎上リスクを判定してください。"},
                 {"role": "user", "content": summary_prompt},
             ],
-            max_tokens=500
         )
 
         result = {
             "analysis_results": analysis_results,
             "openai_risk_assessment": openai_response.choices[0].message['content'].strip()
         }
+        print(result)
         return jsonify(result), 200
 
     except Exception as e:
         print(f"画像分析中にエラーが発生しました: {e}")
         return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
-
 # 動画からフレームを切り出して、Firestorageにアップロードし、URLをFirestoreに保存
 def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
     cap = cv2.VideoCapture(video_path)
