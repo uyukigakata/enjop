@@ -8,6 +8,7 @@ import openai
 import os
 import shutil
 import base64
+from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
 
 # OpenAI APIキーの設定
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -15,6 +16,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 video_processing_blueprint = Blueprint("video_processing", __name__)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+model = load_model(device='cpu')
 
 # URLから画像データを取得する関数
 def fetch_image_from_url(url: str):
@@ -28,6 +30,18 @@ def fetch_image_from_url(url: str):
     except Exception as e:
         print(f"画像取得エラー ({url}): {e}")
         return None
+
+def transcribe_audio(video_path):
+    "動画の音声を文字起こしする関数"
+    audio_path = join(basedir, "audio.wav")
+    command = f"ffmpeg -i {video_path} -q:a 0 -map a {audio_path}"
+    os.system(command)
+
+    audio = audio_from_path(audio_path)
+    transcription =transcribe(model, audio)
+    
+    os.remove(audio_path)
+    return transcription
 
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
@@ -46,12 +60,15 @@ def process_video():
         os.makedirs(frame_dir, exist_ok=True)
         image_paths = save_frames(video_path, frame_dir)
 
+        transcription = transcribe_audio(video_path)
+
         os.remove(video_path)
         shutil.rmtree(frame_dir)
 
         return jsonify({
-            "message": "フレームが保存されました",
-            "image_paths": image_paths
+            "message": "フレームと音声の文字起こしが保存されました",
+            "image_paths": image_paths,
+            "transcription": transcription
         }), 200
 
     except Exception as e:
@@ -69,14 +86,14 @@ def analyze_image_with_ollama(image_path):
 
     data = {
         'model': 'llava',
-        'prompt': 'Explain in detail what you see in this image.',
+        'prompt': 'Please briefly describe what you see in this image.',
         'images': [base64_image]
     }
 
     response = requests.post('http://localhost:11434/api/generate',
-                             headers={'Content-Type': 'application/json'},
-                             json=data,
-                             stream=True)
+                            headers={'Content-Type': 'application/json'},
+                            json=data,
+                            stream=True)
 
     if response.status_code == 200:
         full_response = ''
@@ -96,6 +113,7 @@ def analyze_image_with_ollama(image_path):
 def analyze_images():
     try:
         image_paths = request.json.get("image_paths", [])
+        transcription = request.json.get("transcription", "")
         if not image_paths:
             return jsonify({"error": "画像パスがありません"}), 400
 
@@ -106,6 +124,7 @@ def analyze_images():
 
         summary_prompt = (
             f"Ollamaの結果は以下です:\n{chr(10).join(analysis_results)}\n"
+            f"音声の文字起こし結果は以下です:\n{transcription}\n"
             "総合的な炎上リスクを評価してください。"
         )
         
