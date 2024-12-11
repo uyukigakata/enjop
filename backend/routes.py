@@ -73,7 +73,7 @@ def process_video():
         # 画像分析を実行
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
-            json={"image_paths": image_paths, "transcription": transcription_text}
+            json={"transcription": transcription_text}
         )
 
         # 不要なファイルとフォルダを削除
@@ -125,13 +125,17 @@ def analyze_image_with_ollama(image_path):
 @video_processing_blueprint.route("/analyze_images", methods=["POST"])
 def analyze_images():
     try:
-        image_paths = request.json.get("image_paths", [])
         transcription = request.json.get("transcription", "")
-        if not image_paths:
-            return jsonify({"error": "画像パスがありません"}), 400
+        if not transcription:
+            return jsonify({"error": "文字起こし結果がありません"}), 400
+
+        frame_dir = join(basedir, "frame", splitext(basename(video_path))[0])
+        if not os.path.exists(frame_dir):
+            return jsonify({"error": "フレームディレクトリが存在しません"}), 400
 
         analysis_results = []
-        for idx, image_path in enumerate(image_paths):
+        for idx, image_file in enumerate(os.listdir(frame_dir)):
+            image_path = join(frame_dir, image_file)
             ollama_result = analyze_image_with_ollama(image_path)
             analysis_results.append(f"{idx+1}秒: {ollama_result}")
 
