@@ -11,13 +11,12 @@ import base64
 import json
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
 
+video_processing_blueprint = Blueprint("video_processing", __name__)
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 # OpenAI APIキーの設定
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
-video_processing_blueprint = Blueprint("video_processing", __name__)
-
-basedir = os.path.abspath(os.path.dirname(__file__))
+# Pytouchの推論デバイスをCPUに指定
 model = load_model(device='cpu')
 
 # URLから画像データを取得する関数
@@ -33,8 +32,8 @@ def fetch_image_from_url(url: str):
         print(f"画像取得エラー ({url}): {e}")
         return None
 
+# 動画の音声を文字起こしする関数
 def transcribe_audio(video_path):
-    # 動画の音声を文字起こしする関数
     audio_path = join(basedir, "audio.wav")
     command = f"ffmpeg -i {video_path} -q:a 0 -map a {audio_path}"  # 動画から音声を抽出してWAV形式に保存
     os.system(command)
@@ -49,6 +48,7 @@ def transcribe_audio(video_path):
     os.remove(audio_path)
     return transcription_text
 
+# フロントから動画ファイルを受け取り、処理を行うエンドポイント
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
     try:
@@ -91,17 +91,41 @@ def process_video():
     except Exception as e:
         print(f"動画処理中にエラーが発生しました: {e}")
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
-def encode_image(image_path):
-    "画像をbase64にエンコードする関数"
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
 
+# 推論スピード工場のため、画像圧縮を行う関数
+def compress_image(image_data, max_size=(800, 800), quality=85):
+    # バイト列から画像を読み込み
+    if isinstance(image_data, bytes):
+        arr = np.frombuffer(image_data, np.uint8)
+        img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    else:
+        img = cv2.imread(image_data)
+
+    # アスペクト比を保持しながらリサイズ
+    h, w = img.shape[:2]
+    if w > max_size[0] or h > max_size[1]:
+        ratio = min(max_size[0]/w, max_size[1]/h)
+        new_size = (int(w * ratio), int(h * ratio))
+        img = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA)
+
+    # JPEG形式で圧縮
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+    _, compressed = cv2.imencode('.jpg', img, encode_param)
+    
+    return compressed.tobytes()
+
+# 画像をBase64形式にエンコードする関数
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        compressed_image = compress_image(image_file.read())
+        return base64.b64encode(compressed_image).decode('utf-8')
+
+# ollamaのllavaを用いて、画像を説明させる関数
 def analyze_image_with_ollama(image_path):
-    # ollamaのllavaを用いて、画像を説明させる関数
     base64_image = encode_image(image_path)
 
     data = {
-        'model': 'llava',
+        'model': 'llama3.2-vision:90b',
         'prompt': 'List the elements on the screen, paying special attention to those that do not comply with Japanese law and those that pose a risk of flame wars. In short sentences.',
         'images': [base64_image]
     }
@@ -125,6 +149,7 @@ def analyze_image_with_ollama(image_path):
     else:
         return f"Error: {response.status_code} - {response.text}"
 
+# 画像分析を行うエンドポイント
 @video_processing_blueprint.route("/analyze_images", methods=["POST"])
 def analyze_images():
     try:
@@ -172,7 +197,8 @@ def analyze_images():
     except Exception as e:
         print(f"画像分析中にエラーが発生しました: {e}")
         return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
-# 動画からフレームを切り出して、Firestorageにアップロードし、URLをFirestoreに保存
+
+# 動画からフレームを切り出して、ローカルに保存する関数
 def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
