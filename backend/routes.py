@@ -126,8 +126,8 @@ def analyze_image_with_ollama(image_path):
     base64_image = encode_image(image_path)
 
     data = {
-        'model': 'llama3.2-vision:90b',
-        'prompt': 'List the elements on the screen, paying special attention to those that do not comply with Japanese law and those that pose a risk of flame wars. In short sentences.',
+        'model': 'llava',
+        'prompt': 'This video was shot in Japan. Please describe the situation on the screen as concisely as possible.',
         'images': [base64_image]
     }
 
@@ -176,14 +176,19 @@ def analyze_images():
         summary_prompt = (
             f"Ollamaの結果は以下です:\n{chr(10).join(analysis_results)}\n"
             f"音声の文字起こし結果は以下です:\n{transcription}\n"
-            "総合的な炎上リスクを評価してください。"
         )
-        
+                # legal_scoring.jsonの内容を読み込む
+        with open('backend/legal_scoring.json', 'r', encoding='utf-8') as f:
+            legal_scoring = json.load(f)
+
+        # summary_promptにlegal_scoringの内容を追加
+        summary_prompt += f"法律の情報は以下です:\n{json.dumps(legal_scoring, ensure_ascii=False)}\n"
+
         print(openai.api_key)  # APIキーを確認
         openai_response = openai.ChatCompletion.create(
-            model="gpt-4o",
+            model="o1-mini",
             messages=[
-                {"role": "system", "content": "炎上リスクを判定してください。"},
+                {"role": "system", "content": "画像の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・なぜそう思ったか・その他のリスクについてJSONでレスポンスを返して"},
                 {"role": "user", "content": summary_prompt},
             ],
         )
@@ -219,7 +224,7 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
         if not ret:
             break
 
-        if frame_count % int(2*fps) == 0:
+        if frame_count % int(1*fps) == 0:
             filled_idx = str(idx).zfill(4)
             frame_filename = f"{join(frame_dir, name)}_{filled_idx}.{ext}"
             cv2.imwrite(frame_filename, frame)
