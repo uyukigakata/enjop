@@ -111,7 +111,7 @@ def compress_image(image_data, max_size=(800, 800), quality=85):
 
     # JPEG形式で圧縮
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-    _, compressed = cv2.imencode('.jpg', img, encode_param)
+    compressed = cv2.imencode('.jpg', img, encode_param)
     
     return compressed.tobytes()
 
