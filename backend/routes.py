@@ -9,6 +9,7 @@ import os
 import shutil
 import base64
 import json
+import numpy as np
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
 
 video_processing_blueprint = Blueprint("video_processing", __name__)
