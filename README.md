@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 ### venvの中身を生成
 ```bash
-pip install -r requirements.txt
+pip freeza > requirements.txt
 ```
 
 ### 実行方法
@@ -72,3 +72,5 @@ pnpm build
 ```bash
 pnpm lint
 ```
+
+
