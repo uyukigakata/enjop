@@ -71,7 +71,7 @@ def process_video():
         # 音声を文字起こし
         transcription_text = transcribe_audio(video_path)
 
-        # 画像分析を実行
+        #　analyze_imagesにimageをわたす。
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
                 json={
@@ -93,7 +93,7 @@ def process_video():
         print(f"動画処理中にエラーが発生しました: {e}")
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
 
-# 推論スピード工場のため、画像圧縮を行う関数
+# max800x800のサイズにリサイズandJPEG形式で圧縮する関数
 def compress_image(image_data, max_size=(800, 800), quality=85):
     # バイト列から画像を読み込み
     if isinstance(image_data, bytes):
@@ -149,7 +149,7 @@ def analyze_image_with_ollama(image_path):
     else:
         return f"Error: {response.status_code} - {response.text}"
 
-# 画像分析を行うエンドポイント
+# 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
 @video_processing_blueprint.route("/analyze_images", methods=["POST"])
 def analyze_images():
     try:
@@ -185,10 +185,24 @@ def analyze_images():
 
         print(openai.api_key)  # APIキーを確認
         openai_response = openai.ChatCompletion.create(
-            model="gpt-4o",
+            model="gpt-4",
             messages=[
-                    {"role": "system", "content": "画像の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて日本語かつJSONでレスポンスを返して"},
-                {"role": "user", "content": summary_prompt},
+            {"role": "system", "content": "画像の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
+            {"role": "system", "content": """
+            {
+                "laws": [
+                    {
+                        "law_id": "法律のID", # int
+                        "law_name": "法律名",  # str
+                        "law_risk_level": "法律の違反確率", # int(0~10) 
+                        "law_reason": "なぜそう思ったか" #str
+                    }
+                ], 
+                "comment": "その他のリスクについて", #str
+                "rating": "1~10段階評価によるリスク評価" #int(0~10)
+            }
+            """},
+            {"role": "user", "content": summary_prompt},
             ],
         )
 
