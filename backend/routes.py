@@ -36,7 +36,7 @@ def fetch_image_from_url(url: str):
 # 動画の音声を文字起こしする関数
 def transcribe_audio(video_path):
     audio_path = join(basedir, "audio.wav")
-    command = f"ffmpeg -i {video_path} -q:a 0 -map a {audio_path}"  # 動画から音声を抽出してWAV形式に保存
+    command = f"ffmpeg -i {video_path} -ar 16000 -map a {audio_path}"  # 動画から音声を抽出して16000WAV形式に保存
     os.system(command)
 
     audio = audio_from_path(audio_path)
@@ -74,7 +74,7 @@ def process_video():
         # 画像分析を実行
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
-                 json={
+                json={
                     "image_paths": image_paths,         # image_paths を追加
                     "transcription": transcription_text
     }
