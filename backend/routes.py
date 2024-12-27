@@ -185,7 +185,7 @@ def analyze_images():
 
         print(openai.api_key)  # APIキーを確認
         openai_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
             {"role": "system", "content": "画像の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
             {"role": "system", "content": """
