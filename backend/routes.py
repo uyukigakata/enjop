@@ -284,7 +284,9 @@ def bluesky_gettimeline():
             return jsonify({"error": "Session is required"}), 400
         bluesky_auth_check(session)
         res = client.get_timeline()
-        return jsonify(res), 200
+        return jsonify(res), 20
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @bluesky_blueprint.route("/bluesky_getprofile", methods=["GET"])
 def bluesky_getprofile():
