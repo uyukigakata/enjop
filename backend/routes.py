@@ -11,15 +11,18 @@ import base64
 import json
 import numpy as np
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
+from atproto import Client, client_utils
 
 video_processing_blueprint = Blueprint("video_processing", __name__)
+bluesky_blueprint = Blueprint("bluesky", __name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # OpenAI APIキーの設定
 openai.api_key = os.getenv("OPENAI_API_KEY")
 # Pytouchの推論デバイスをCPUに指定
 model = load_model(device='cpu')
-
+# Bluesky(atproto)のクライアントを初期化
+client=Client()
 # URLから画像データを取得する関数
 def fetch_image_from_url(url: str):
     try:
@@ -249,3 +252,81 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
     cap.release()
     print("Frames have been saved.")
     return image_paths  # 追加
+
+# セッションをチェックする関数
+def bluesky_auth_check(session:str):
+    try:
+        client.login(session_string=session)
+        return True
+    except Exception as e:
+        return False
+
+# Blueskyのログインエンドポイント idは".bsky.social"までいるex:soynyuu.bsky.social
+@bluesky_blueprint.route("/bluesky_login", methods=["POST"])
+def bluesky_login():
+    try:
+        data = request.get_json()
+        if not data or 'id' not in data or 'password' not in data:
+            return jsonify({"error": "ID and password are required"}), 400
+            
+        client.login(data['id'], data['password'])
+        session = client.export_session_string()
+        
+        return jsonify({"status": "success", "session": session}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@bluesky_blueprint.route("/bluesky_gettimeline", methods=["GET"])
+def bluesky_gettimeline():
+    try:
+        session = request.headers.get("session")
+        if not session:
+            return jsonify({"error": "Session is required"}), 400
+        bluesky_auth_check(session)
+        res = client.get_timeline()
+        return jsonify(res), 200
+
+@bluesky_blueprint.route("/bluesky_getprofile", methods=["GET"])
+def bluesky_getprofile():
+    try:
+        session = request.headers.get("session")
+        did = request.args.get("did")
+        
+        if not session:
+            return jsonify({"error": "Session is required"}), 400
+        if not did:
+            return jsonify({"error": "DID is required"}), 400
+        
+        bluesky_auth_check(session)
+        res = client.get_profile(did=did)
+        return jsonify(res), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@bluesky_blueprint.route("/bluesky_post", methods=["POST"])
+def post_video():
+    try:
+        session = request.form.get("session")
+        text = request.form.get("text")
+        video_file = request.files.get("video")
+
+        if not session or not text or not video_file:
+            return jsonify({"error": "Session, text, and video are required"}), 400
+
+        bluesky_auth_check(session)
+
+        # 動画ファイルの読み込み
+        video_data = video_file.read()
+
+        # 動画投稿
+        response = client.send_video(
+            text=text,
+            video=video_data,
+            video_alt="動画の説明",
+        )
+        print("動画投稿成功:", response)
+        return jsonify({"status": "success", "response": response}), 200
+
+    except Exception as e:
+        print(f"動画投稿エラー: {e}")
+        return jsonify({"error": str(e)}), 500
