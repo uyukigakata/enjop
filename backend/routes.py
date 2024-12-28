@@ -30,11 +30,13 @@ client=Client()
 
 # Bluesky(atproto)のクライアントをログイン(共通IDとパスワードを使用)
 client.login("enjop.bsky.social", os.getenv("BLUESKY_PASSWORD"))
+
 """
 ------------------------------------------------------------------
-以下、video_processing_blueprintのエンドポイント
+以下、video_processing_blueprint(動画をLLMに投げるまわり)のエンドポイント
 ------------------------------------------------------------------
 """
+
 # URLから画像データを取得する関数
 def fetch_image_from_url(url: str):
     try:
@@ -275,10 +277,6 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
 @bluesky_blueprint.route("/bluesky_gettimeline", methods=["GET"])
 def bluesky_gettimeline():
     try:
-        session = request.headers.get("session")
-        if not session:
-            return jsonify({"error": "Session is required"}), 400
-        bluesky_auth_check(session)
         res = client.get_timeline()
         return jsonify(res), 20
     except Exception as e:
@@ -294,21 +292,37 @@ def bluesky_getprofile(did):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@bluesky_blueprint.route("/bluesky_post", methods=["POST"])
+@bluesky_blueprint.route("/bluesky_post_video", methods=["POST"])
 def post_video():
     try:
+        # フォームからデータを取得
         text = request.form.get("text")
         video_file = request.files.get("video")
+
+        # バリデーション
+        if not text:
+            return jsonify({"status": "error", "message": "no_test"}), 400
+        if not video_file:
+            return jsonify({"status": "error", "message": "no_video_files"}), 400
+
+        # 動画データの読み込み
         video_data = video_file.read()
 
         # 動画投稿
-        client.send_video(
+        response = client.send_video(
             text=text,
             video=video_data,
-            video_alt="TODO: 動画の説明文",
+            video_alt="動画の説明文"
         )
-        return jsonify({"status": "success"}), 200
+        
+        return jsonify({
+            "status": "success",
+            "message": "投稿が完了しました"
+        }), 200
 
     except Exception as e:
         print(f"動画投稿エラー: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "status": "error", 
+            "message": f"投稿に失敗しました: {str(e)}"
+        }), 500
