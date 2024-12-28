@@ -278,17 +278,21 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
 def bluesky_gettimeline():
     try:
         res = client.get_timeline()
-        return jsonify(res), 20
+        # Extract feed data from response and convert each post to dict
+        feed_data = [post.dict() for post in res.feed]
+        return jsonify({"feed": feed_data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@bluesky_blueprint.route("/bluesky_getprofile/<did>", methods=["GET"])
-def bluesky_getprofile(did):
+
+@bluesky_blueprint.route("/bluesky_getprofile/<handle>", methods=["GET"])
+def bluesky_getprofile(handle):
     try:
-        if not did:
-            return jsonify({"error": "DID is required"}), 400
-        res = client.get_profile(did=did)
-        return jsonify(res), 200
+        # Get profile data using the provided handle
+        profile = client.get_profile(handle)
+        # Convert profile data to dict
+        profile_data = profile.dict()
+        return jsonify({"profile": profile_data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
