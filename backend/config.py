@@ -6,3 +6,4 @@ load_dotenv()  # .envファイルを読み込み
 DEBUG = True
 # OpenAI APIキーの設定
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+BLUESKY_PASSWORD = os.getenv("BLUESKY_PASSWORD")
