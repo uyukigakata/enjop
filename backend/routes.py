@@ -29,6 +29,11 @@ model = load_model(device='cpu')
 client=Client()
 
 # Bluesky(atproto)のクライアントをログイン(共通IDとパスワードを使用)
+
+# Load .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 client.login("enjop.bsky.social", os.getenv("BLUESKY_PASSWORD"))
 
 """

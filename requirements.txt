@@ -157,7 +157,7 @@ pytorch-lightning==2.4.0
 pytz==2024.2
 PyYAML==6.0.2
 RapidFuzz==3.10.1
-reazonspeech-nemo-asr @ file://ReazonSpeech/pkg/nemo-asr
+reazonspeech-nemo-asr @ file:./ReazonSpeech/pkg/nemo-asr
 regex==2024.11.6
 requests==2.32.3
 resampy==0.4.3
