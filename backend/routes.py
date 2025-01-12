@@ -115,7 +115,7 @@ def process_video():
 
         #　analyze_imagesにimageをわたす。
         analysis_response = requests.post(
-            "http://localhost:5000/api/process_images",
+            "http://localhost:5000/api/analyze_images",
                 json={
                     "image_paths": image_paths,         # image_paths を追加
                     "transcription": transcription_text
@@ -184,7 +184,7 @@ def analyze_image_with_ollama(image_path):
     return response
 
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
-@video_processing_blueprint.route("/prossces_images", methods=["POST"])
+@video_processing_blueprint.route("/analyze_images", methods=["POST"])
 def analyze_images():
     try:
         transcription = request.json.get("transcription", "")
