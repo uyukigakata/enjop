@@ -157,16 +157,20 @@ def compress_image(image_data, max_size=(400, 400), quality=85):
     return compressed.tobytes()
 
 # 画像をBase64形式にエンコードする関数
+"""
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         compressed_image = compress_image(image_file.read())
         return base64.b64encode(compressed_image).decode('utf-8')
-
+"""
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 # ollamaのllavaを用いて、画像を説明させる関数
 def analyze_image_with_ollama(image_path):
     base64_image = encode_image(image_path)
 
-    ollama_response :ChatResponse= chat(
+    ollama_response: ChatResponse= chat(
         model='llava', 
         messages=[
     {
@@ -176,7 +180,7 @@ def analyze_image_with_ollama(image_path):
     },
     ])
 
-    response = (ollama_response.messages.content)
+    response = ollama_response.message.content
     return response
 
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
