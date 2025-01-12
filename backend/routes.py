@@ -115,7 +115,7 @@ def process_video():
 
         #　analyze_imagesにimageをわたす。
         analysis_response = requests.post(
-            "http://localhost:5000/api/analyze_images",
+            "http://localhost:5000/api/process_images",
                 json={
                     "image_paths": image_paths,         # image_paths を追加
                     "transcription": transcription_text
@@ -136,7 +136,7 @@ def process_video():
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
 
 # max800x800のサイズにリサイズandJPEG形式で圧縮する関数
-def compress_image(image_data, max_size=(400, 400), quality=85):
+def compress_image(image_data, max_size=(600, 600), quality=85):
     # バイト列から画像を読み込み
     if isinstance(image_data, bytes):
         arr = np.frombuffer(image_data, np.uint8)
@@ -184,14 +184,11 @@ def analyze_image_with_ollama(image_path):
     return response
 
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
-@video_processing_blueprint.route("/analyze_images", methods=["POST"])
+@video_processing_blueprint.route("/prossces_images", methods=["POST"])
 def analyze_images():
     try:
         transcription = request.json.get("transcription", "")
         image_paths = request.json.get("image_paths", [])
-        
-        if not transcription:
-            return jsonify({"error": "文字起こし結果がありません"}), 400
         
         if not image_paths:
             return jsonify({"error": "画像パスがありません"}), 400
