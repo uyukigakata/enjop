@@ -176,7 +176,30 @@ def process_image():
 
     except Exception as e:
         print(f"画像処理中にエラーが発生しました: {e}")
-        return jsonify({"error": "画像の処理中にエラーが発生しました"}), 500
+        return jsonify({"error": "画像の処理中にエラーcが発生しました"}), 500
+
+def process_text():
+    try:
+        content_str = request.form.get("content_str", "")
+        if not content_str:
+            return jsonify({"error": "テキストが提供されていません"}), 400
+
+        # テキスト分析エンドポイントに変更
+        analysis_response = requests.post(
+            "http://localhost:5000/api/analyze_images",
+            json={
+                "content_str": content_str,
+            }
+        )
+
+        if analysis_response.status_code == 200:
+            return jsonify(analysis_response.json()), 200
+        else:
+            return jsonify({"error": "テキスト分析中にエラーが発生しました"}), 500
+
+    except Exception as e:
+        print(f"テキスト処理中にエラーが発生しました: {e}")
+        return jsonify({"error": "テキストの処理中にエラーが発生しました"}), 500
 
 # max800x800のサイズにリサイズandJPEG形式で圧縮する関数
 def compress_image(image_data, max_size=(600, 600), quality=85):
@@ -323,6 +346,30 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
     print("Frames have been saved.")
     return image_paths  # 追加
 
+@video_processing_blueprint.route("/upload", methods=["POST"])
+def upload_file():
+    try:
+        file = request.files.get("file")
+        content_str = request.form.get("content_str", "")
+        
+        if file:
+            content_type = file.content_type
+            
+            # MIMEタイプに基づいて振り分け
+            if content_type.startswith('image/'):
+                return process_image()
+            elif content_type.startswith('video/'):
+                return process_video()
+            else:
+                return jsonify({"error": "未対応のファイル形式です"}), 400
+        elif content_str:
+            return process_text()
+        else:
+            return jsonify({"error": "ファイルまたはテキストが提供されていません"}), 400
+
+    except Exception as e:
+        print(f"ファイル処理中にエラーが発生しました: {e}")
+        return jsonify({"error": "ファイルの処理中にエラーが発生しました"}), 500
 
 """
 ------------------------------------------------------------------
