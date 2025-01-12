@@ -35,7 +35,7 @@ const handleFileUpload = async (e: Event) => {
     const analysisResponse = await axios.get(`/api/analyze_images/${docId}`);
     results.value = analysisResponse.data;
   } catch (error) {
-    console.error(error);
+    ;   console.error(error);
     // エラー処理
   }
 };
