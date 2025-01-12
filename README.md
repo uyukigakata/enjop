@@ -1,6 +1,13 @@
 # SecHack365_4C_えんじょっぷ
 
 # Backend環境構築
+## Only Ubuntu
+~~~ bash
+sudo ./install.sh
+~~~
+
+
+
 https://qiita.com/toki_mwc/items/7890d93175d21281e257
 を参考に
 ### 仮想環境作成
