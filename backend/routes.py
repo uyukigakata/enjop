@@ -92,6 +92,7 @@ def transcribe_audio(video_path):
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
     try:
+        content_str = request.json.get("content_str", "")
         file = request.files.get("file")
         if not file:
             return jsonify({"error": "ファイルがありません"}), 400
@@ -117,6 +118,7 @@ def process_video():
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
                 json={
+                    "content_str": content_str,
                     "image_paths": image_paths,         # image_paths を追加
                     "transcription": transcription_text
     }
@@ -182,13 +184,13 @@ def analyze_image_with_ollama(image_path):
 
     response = ollama_response.message.content
     return response
-
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
 @video_processing_blueprint.route("/analyze_images", methods=["POST"])
 def analyze_images():
     try:
         transcription = request.json.get("transcription", "")
         image_paths = request.json.get("image_paths", [])
+        content_str=request.json.get("content_str", "")
         
         if not image_paths:
             return jsonify({"error": "画像パスがありません"}), 400
@@ -213,12 +215,10 @@ def analyze_images():
 
         # summary_promptにlegal_scoringの内容を追加
         summary_prompt += f"法律の情報は以下です:\n{json.dumps(legal_scoring, ensure_ascii=False)}\n"
-
-        print(openai.api_key)  # APIキーを確認
         openai_response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
-            {"role": "system", "content": "画像の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
+            {"role": "system", "content": "投稿予定の文字列（ないかもしれない）と、動画・画像（一フレーム分の画像しかないときは画像、それ以外は動画）の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
             {"role": "system", "content": """
             {
                 "laws": [
@@ -234,6 +234,7 @@ def analyze_images():
             }
             """},
             {"role": "user", "content": summary_prompt},
+            {"role":"user", "content": content_str}
             ],
         )
 
