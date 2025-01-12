@@ -10,6 +10,8 @@ import shutil
 import base64
 import json
 import numpy as np
+from ollama import chat
+from ollama import ChatResponse
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
 from atproto import Client
 from dotenv import load_dotenv
@@ -164,30 +166,16 @@ def encode_image(image_path):
 def analyze_image_with_ollama(image_path):
     base64_image = encode_image(image_path)
 
-    data = {
-        'model': 'llava',
-        'prompt': 'This video was shot in Japan. Please describe the situation on the screen as concisely as possible.',
+    ollama_response = client.chat(model='llava', messages=[
+    {
+        'role': 'user',
+        'content': 'This video was shot in Japan. Please describe the situation on the screen as concisely as possible.',
         'images': [base64_image]
     }
+    ])
 
-    response = requests.post('http://localhost:11434/api/generate',
-                            headers={'Content-Type': 'application/json'},
-                            json=data,
-                            stream=True)
-
-    if response.status_code == 200:
-        full_response = ''
-        for line in response.iter_lines():
-            if line:
-                json_response = json.loads(line)
-                if 'response' in json_response:
-                    full_response += json_response['response']
-                    print(json_response['response'], end='', flush=True)
-                if json_response.get('done', False):
-                    break
-        return full_response
-    else:
-        return f"Error: {response.status_code} - {response.text}"
+    response = (ollama_response['message']['content'])
+    return response
 
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
 @video_processing_blueprint.route("/analyze_images", methods=["POST"])
