@@ -12,10 +12,11 @@ import json
 import numpy as np
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
 from atproto import Client
-
+from dotenv import load_dotenv
 import uuid
 import subprocess
 
+load_dotenv()
 # Blueprintの初期化(video・bluesky)
 video_processing_blueprint = Blueprint("video_processing", __name__)
 bluesky_blueprint = Blueprint("bluesky", __name__)
@@ -33,9 +34,6 @@ client=Client()
 # Bluesky(atproto)のクライアントをログイン(共通IDとパスワードを使用)
 
 # Load .env file
-from dotenv import load_dotenv
-load_dotenv()
-
 client.login("enjop.bsky.social", os.getenv("BLUESKY_PASSWORD"))
 
 """
