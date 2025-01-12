@@ -148,15 +148,17 @@ def encode_image(image_path):
 def analyze_image_with_ollama(image_path):
     base64_image = encode_image(image_path)
 
-    ollama_response = client.chat(model='llava', messages=[
+    ollama_response :ChatResponse= chat(
+        model='llava', 
+        messages=[
     {
         'role': 'user',
         'content': 'This video was shot in Japan. Please describe the situation on the screen as concisely as possible.',
         'images': [base64_image]
-    }
+    },
     ])
 
-    response = (ollama_response['message']['content'])
+    response = (ollama_response.messages.content)
     return response
 
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
