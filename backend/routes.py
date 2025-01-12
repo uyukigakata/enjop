@@ -12,8 +12,11 @@ import json
 import numpy as np
 from reazonspeech.nemo.asr import load_model, transcribe, audio_from_path
 from atproto import Client
+from dotenv import load_dotenv
+import uuid
+import subprocess
 
-
+load_dotenv()
 # Blueprintの初期化(video・bluesky)
 video_processing_blueprint = Blueprint("video_processing", __name__)
 bluesky_blueprint = Blueprint("bluesky", __name__)
@@ -31,9 +34,6 @@ client=Client()
 # Bluesky(atproto)のクライアントをログイン(共通IDとパスワードを使用)
 
 # Load .env file
-from dotenv import load_dotenv
-load_dotenv()
-
 client.login("enjop.bsky.social", os.getenv("BLUESKY_PASSWORD"))
 
 """
@@ -57,19 +57,34 @@ def fetch_image_from_url(url: str):
 
 # 動画の音声を文字起こしする関数
 def transcribe_audio(video_path):
-    audio_path = join(basedir, "audio.wav")
-    command = f"ffmpeg -i {video_path} -ar 16000 -map a {audio_path}"  # 動画から音声を抽出して16000WAV形式に保存
-    os.system(command)
+    try:
+        # ffmpegで音声トラックが存在するか確認
+        check_audio_command = f"ffmpeg -i {video_path} -map 0:a -c copy -f null -"
+        result = subprocess.run(check_audio_command, shell=True, stderr=subprocess.PIPE)
 
-    audio = audio_from_path(audio_path)
-    transcription = transcribe(model, audio)
-    
-    # transcription オブジェクトからテキストを抽出
-    transcription_text = transcription.text  # ここで transcription_text を定義
-    print(transcription_text)
-    
-    os.remove(audio_path)
-    return transcription_text
+        # エラー出力に "Stream map '0:a' matches no streams." が含まれていたら音声なし
+        if b"matches no streams" in result.stderr:
+            print("音声トラックが見つかりませんでした")
+            return "音声トラックがありません"
+
+        # 音声抽出コマンド
+        audio_path = join(basedir, "audio.wav")
+        extract_audio_command = f"ffmpeg -i {video_path} -ar 16000 -map a {audio_path}"
+        os.system(extract_audio_command)
+
+        # 文字起こし
+        audio = audio_from_path(audio_path)
+        transcription = transcribe(model, audio)
+        transcription_text = transcription.text
+        print(transcription_text)
+
+        # 音声ファイルを削除
+        os.remove(audio_path)
+        return transcription_text
+    except Exception as e:
+        print(f"音声文字起こしエラー: {e}")
+        return "音声文字起こし中にエラーが発生しました"
+
 
 # フロントから動画ファイルを受け取り、処理を行うエンドポイント
 @video_processing_blueprint.route("/process_video", methods=["POST"])
@@ -79,9 +94,12 @@ def process_video():
         if not file:
             return jsonify({"error": "ファイルがありません"}), 400
 
+        #ファイル名をUTFで英語に
+        unique_filename = f"{uuid.uuid4()}.mp4"
+
         video_dir = join(basedir, "video")
         os.makedirs(video_dir, exist_ok=True)
-        video_path = join(video_dir, file.filename)
+        video_path = join(video_dir, unique_filename)
         file.save(video_path)
         print(f"動画ファイルを保存しました: {video_path}")
 
