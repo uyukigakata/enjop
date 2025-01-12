@@ -92,12 +92,14 @@ def transcribe_audio(video_path):
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
     try:
+        content_str = request.json.get("content_str", "")
         file = request.files.get("file")
         if not file:
             return jsonify({"error": "ファイルがありません"}), 400
 
         #ファイル名をUTFで英語に
-        unique_filename = f"{uuid.uuid4()}.mp4"
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
 
         video_dir = join(basedir, "video")
         os.makedirs(video_dir, exist_ok=True)
@@ -117,6 +119,7 @@ def process_video():
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
                 json={
+                    "content_str": content_str,
                     "image_paths": image_paths,         # image_paths を追加
                     "transcription": transcription_text
     }
@@ -135,8 +138,48 @@ def process_video():
         print(f"動画処理中にエラーが発生しました: {e}")
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
 
+# フロントから動画ファイルを受け取り、処理を行うエンドポイント
+@video_processing_blueprint.route("/process_image", methods=["POST"])
+def process_image():
+    try:
+        content_str = request.json.get("content_str", "")
+        file = request.files.get("file")
+        if not file:
+            return jsonify({"error": "ファイルがありません"}), 400
+
+        #ファイル名をUTFで英語に
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+        image_dir = join(basedir, "image")
+        os.makedirs(image_dir, exist_ok=True)
+        image_path = join(image_dir, unique_filename)
+        file.save(image_path)
+        print(f"画像ファイルを保存しました: {image_path}")
+
+        #　analyze_imagesにimageをわたす。
+        analysis_response = requests.post(
+            "http://localhost:5000/api/analyze_images",
+                json={
+                    "content_str": content_str,
+                    "image_paths": image_path,         # image_paths を追加
+    }
+        )
+
+        # 不要なファイルとフォルダを削除
+        os.remove(image_path)
+
+        if analysis_response.status_code == 200:
+            return jsonify(analysis_response.json()), 200
+        else:
+            return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
+
+    except Exception as e:
+        print(f"画像処理中にエラーが発生しました: {e}")
+        return jsonify({"error": "画像の処理中にエラーが発生しました"}), 500
+
 # max800x800のサイズにリサイズandJPEG形式で圧縮する関数
-def compress_image(image_data, max_size=(400, 400), quality=85):
+def compress_image(image_data, max_size=(600, 600), quality=85):
     # バイト列から画像を読み込み
     if isinstance(image_data, bytes):
         arr = np.frombuffer(image_data, np.uint8)
@@ -182,16 +225,13 @@ def analyze_image_with_ollama(image_path):
 
     response = ollama_response.message.content
     return response
-
 # 画像分析を行うエンドポイント(いまは、prossece_videoからのPOSTを想定)
 @video_processing_blueprint.route("/analyze_images", methods=["POST"])
 def analyze_images():
     try:
         transcription = request.json.get("transcription", "")
         image_paths = request.json.get("image_paths", [])
-        
-        if not transcription:
-            return jsonify({"error": "文字起こし結果がありません"}), 400
+        content_str=request.json.get("content_str", "")
         
         if not image_paths:
             return jsonify({"error": "画像パスがありません"}), 400
@@ -201,7 +241,7 @@ def analyze_images():
             if not os.path.exists(image_path):
                 continue
             ollama_result = analyze_image_with_ollama(image_path)
-            analysis_results.append(f"{idx+1}秒: {ollama_result}")
+            analysis_results.append(f"{idx+2}秒: {ollama_result}")
 
         if not analysis_results:
             return jsonify({"error": "有効な画像が見つかりません"}), 400
@@ -216,12 +256,10 @@ def analyze_images():
 
         # summary_promptにlegal_scoringの内容を追加
         summary_prompt += f"法律の情報は以下です:\n{json.dumps(legal_scoring, ensure_ascii=False)}\n"
-
-        print(openai.api_key)  # APIキーを確認
         openai_response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
-            {"role": "system", "content": "画像の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
+            {"role": "system", "content": "投稿予定の文字列（ないかもしれない）と、動画・画像（一フレーム分の画像しかないときは画像、それ以外は動画）の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
             {"role": "system", "content": """
             {
                 "laws": [
@@ -237,6 +275,7 @@ def analyze_images():
             }
             """},
             {"role": "user", "content": summary_prompt},
+            {"role":"user", "content": content_str}
             ],
         )
 
