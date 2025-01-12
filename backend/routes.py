@@ -92,7 +92,7 @@ def transcribe_audio(video_path):
 @video_processing_blueprint.route("/process_video", methods=["POST"])
 def process_video():
     try:
-        content_str = request.json.get("content_str", "")
+        content_str = request.form.get("content_str", "")
         file = request.files.get("file")
         if not file:
             return jsonify({"error": "ファイルがありません"}), 400
@@ -142,7 +142,7 @@ def process_video():
 @video_processing_blueprint.route("/process_image", methods=["POST"])
 def process_image():
     try:
-        content_str = request.json.get("content_str", "")
+        content_str = request.form.get("content_str", "")
         file = request.files.get("file")
         if not file:
             return jsonify({"error": "ファイルがありません"}), 400
