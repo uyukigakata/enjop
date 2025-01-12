@@ -241,7 +241,7 @@ def analyze_images():
             if not os.path.exists(image_path):
                 continue
             ollama_result = analyze_image_with_ollama(image_path)
-            analysis_results.append(f"{idx+1}秒: {ollama_result}")
+            analysis_results.append(f"{idx+2}秒: {ollama_result}")
 
         if not analysis_results:
             return jsonify({"error": "有効な画像が見つかりません"}), 400
