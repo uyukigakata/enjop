@@ -116,7 +116,7 @@ def process_video():
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
 
 # max800x800のサイズにリサイズandJPEG形式で圧縮する関数
-def compress_image(image_data, max_size=(800, 800), quality=85):
+def compress_image(image_data, max_size=(400, 400), quality=85):
     # バイト列から画像を読み込み
     if isinstance(image_data, bytes):
         arr = np.frombuffer(image_data, np.uint8)
@@ -259,7 +259,7 @@ def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
         if not ret:
             break
 
-        if frame_count % int(1*fps) == 0:
+        if frame_count % int(2*fps) == 0:
             filled_idx = str(idx).zfill(4)
             frame_filename = f"{join(frame_dir, name)}_{filled_idx}.{ext}"
             cv2.imwrite(frame_filename, frame)
