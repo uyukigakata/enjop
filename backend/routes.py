@@ -98,7 +98,8 @@ def process_video():
             return jsonify({"error": "ファイルがありません"}), 400
 
         #ファイル名をUTFで英語に
-        unique_filename = f"{uuid.uuid4()}.mp4"
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
 
         video_dir = join(basedir, "video")
         os.makedirs(video_dir, exist_ok=True)
@@ -136,6 +137,46 @@ def process_video():
     except Exception as e:
         print(f"動画処理中にエラーが発生しました: {e}")
         return jsonify({"error": "動画の処理中にエラーが発生しました"}), 500
+
+# フロントから動画ファイルを受け取り、処理を行うエンドポイント
+@video_processing_blueprint.route("/process_image", methods=["POST"])
+def process_image():
+    try:
+        content_str = request.json.get("content_str", "")
+        file = request.files.get("file")
+        if not file:
+            return jsonify({"error": "ファイルがありません"}), 400
+
+        #ファイル名をUTFで英語に
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+        image_dir = join(basedir, "image")
+        os.makedirs(image_dir, exist_ok=True)
+        image_path = join(image_dir, unique_filename)
+        file.save(image_path)
+        print(f"画像ファイルを保存しました: {image_path}")
+
+        #　analyze_imagesにimageをわたす。
+        analysis_response = requests.post(
+            "http://localhost:5000/api/analyze_images",
+                json={
+                    "content_str": content_str,
+                    "image_paths": image_path,         # image_paths を追加
+    }
+        )
+
+        # 不要なファイルとフォルダを削除
+        os.remove(image_path)
+
+        if analysis_response.status_code == 200:
+            return jsonify(analysis_response.json()), 200
+        else:
+            return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
+
+    except Exception as e:
+        print(f"画像処理中にエラーが発生しました: {e}")
+        return jsonify({"error": "画像の処理中にエラーが発生しました"}), 500
 
 # max800x800のサイズにリサイズandJPEG形式で圧縮する関数
 def compress_image(image_data, max_size=(600, 600), quality=85):
