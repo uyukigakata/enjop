@@ -386,3 +386,10 @@ venv/
 =======
 #環境変数
 venv/
+ollama.tgz
+bin/ollama
+=1.0.0
+ReazonSpeech
+ReazonSpeech/
+
+.venv/

@@ -1,7 +1,15 @@
 # SecHack365_4C_えんじょっぷ
 
 # Backend環境構築
+## Only Ubuntu
+~~~ bash
+sudo ./install.sh
+~~~
 
+
+
+https://qiita.com/toki_mwc/items/7890d93175d21281e257
+を参考に
 ### 仮想環境作成
 ```bash
 python -m venv venv
@@ -28,7 +36,7 @@ pip install -r requirements.txt
 
 ### venvの中身を生成
 ```bash
-pip install -r requirements.txt
+pip freeza > requirements.txt
 ```
 
 ### 実行方法
@@ -71,3 +79,5 @@ pnpm build
 ```bash
 pnpm lint
 ```
+
+

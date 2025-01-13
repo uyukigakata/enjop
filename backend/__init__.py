@@ -1,7 +1,8 @@
 from flask import Flask,render_template,send_from_directory
 from flask_cors import CORS
 import os
-from .routes import video_processing_blueprint  # 相対インポートに変更
+from backend.routes import video_processing_blueprint  # 相対インポートに変更
+from backend.routes import bluesky_blueprint
 
 def create_app():
     app = Flask(__name__)
@@ -12,6 +13,7 @@ def create_app():
     
     # Blueprintの登録
     app.register_blueprint(video_processing_blueprint, url_prefix="/api")
+    app.register_blueprint(bluesky_blueprint, url_prefix="/api")
 
 
     # シンプルなテストルートを定義
