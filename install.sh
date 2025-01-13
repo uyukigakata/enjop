@@ -4,12 +4,10 @@
 apt update
 apt install -y ffmpeg python3-pip git　python3-devel
 
-# 作業ディレクトリに移動
-# cd $HOME
 
 # リポジトリをクローン
-# git clone https://github.com/uyukigakata/SecHack365_4C_enjo.git
-# cd SecHack365_4C_enjo
+git clone https://github.com/uyukigakata/SecHack365_4C_enjo.git
+cd SecHack365_4C_enjo
 
 # 仮想環境の作成
 python3 -m venv .venv
