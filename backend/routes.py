@@ -97,7 +97,7 @@ def process_video():
         if not file:
             return jsonify({"error": "ファイルがありません"}), 400
 
-        #ファイル名をUTFで英語に
+        # ファイル名をUTFで英語に
         file_extension = os.path.splitext(file.filename)[1]
         unique_filename = f"{uuid.uuid4()}{file_extension}"
 
@@ -115,14 +115,14 @@ def process_video():
         # 音声を文字起こし
         transcription_text = transcribe_audio(video_path)
 
-        #　analyze_imagesにimageをわたす。
+        # analyze_imagesにimageをわたす。
         analysis_response = requests.post(
             "http://localhost:5000/api/analyze_images",
-                json={
-                    "content_str": content_str,
-                    "image_paths": image_paths,         # image_paths を追加
-                    "transcription": transcription_text
-    }
+            json={
+                "content_str": content_str,
+                "image_paths": image_paths,  # image_paths をリストとして渡す
+                "transcription": transcription_text
+            }
         )
 
         # 不要なファイルとフォルダを削除
@@ -162,7 +162,7 @@ def process_image():
             "http://localhost:5000/api/analyze_images",
                 json={
                     "content_str": content_str,
-                    "image_paths": image_path,         # image_paths を追加
+                    "image_paths": [image_path],         # image_paths を追加
     }
         )
 
@@ -189,6 +189,8 @@ def process_text():
             "http://localhost:5000/api/analyze_images",
             json={
                 "content_str": content_str,
+                "image_paths": [],  # 空のリストを渡す
+                "transcription": ""  # 空の文字列を渡す
             }
         )
 
@@ -200,7 +202,7 @@ def process_text():
     except Exception as e:
         print(f"テキスト処理中にエラーが発生しました: {e}")
         return jsonify({"error": "テキストの処理中にエラーが発生しました"}), 500
-
+        
 # max800x800のサイズにリサイズandJPEG形式で圧縮する関数
 def compress_image(image_data, max_size=(600, 600), quality=85):
     # バイト列から画像を読み込み
@@ -254,7 +256,7 @@ def analyze_images():
     try:
         transcription = request.json.get("transcription", "")
         image_paths = request.json.get("image_paths", [])
-        content_str=request.json.get("content_str", "")
+        content_str = request.json.get("content_str", "")
         
         if not image_paths:
             return jsonify({"error": "画像パスがありません"}), 400
@@ -273,7 +275,7 @@ def analyze_images():
             f"Ollamaの結果は以下です:\n{chr(10).join(analysis_results)}\n"
             f"音声の文字起こし結果は以下です:\n{transcription}\n"
         )
-                # legal_scoring.jsonの内容を読み込む
+        # legal_scoring.jsonの内容を読み込む
         with open('backend/legal_scoring.json', 'r', encoding='utf-8') as f:
             legal_scoring = json.load(f)
 
@@ -282,23 +284,23 @@ def analyze_images():
         openai_response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
-            {"role": "system", "content": "投稿予定の文字列（ないかもしれない）と、動画・画像（一フレーム分の画像しかないときは画像、それ以外は動画）の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
-            {"role": "system", "content": """
-            {
-                "laws": [
-                    {
-                        "law_id": "法律のID", # int
-                        "law_name": "法律名",  # str
-                        "law_risk_level": "法律の違反確率", # int(0~10) 
-                        "law_reason": "なぜそう思ったか" #str
-                    }
-                ], 
-                "comment": "その他のリスクについて", #str
-                "rating": "1~10段階評価によるリスク評価" #int(0~10)
-            }
-            """},
-            {"role": "user", "content": summary_prompt},
-            {"role":"user", "content": content_str}
+                {"role": "system", "content": "投稿予定の文字列（ないかもしれない）と、動画・画像（一フレーム分の画像しかないときは画像、それ以外は動画）の分析結果・音声の文字起こしの結果について、添付された日本の法律についてのJsonファイルから、違反していそうな法律のID・法律名・今回の結果について法律の違反確率を1~10段階評価・なぜそう思ったか・その他のリスクについて、以下の様式にしたがってレスポンスを返してください。"},
+                {"role": "system", "content": """
+                {
+                    "laws": [
+                        {
+                            "law_id": "法律のID", # int
+                            "law_name": "法律名",  # str
+                            "law_risk_level": "法律の違反確率", # int(0~10) 
+                            "law_reason": "なぜそう思ったか" #str
+                        }
+                    ], 
+                    "comment": "その他のリスクについて", #str
+                    "rating": "1~10段階評価によるリスク評価" #int(0~10)
+                }
+                """},
+                {"role": "user", "content": summary_prompt},
+                {"role":"user", "content": content_str}
             ],
         )
 
@@ -312,7 +314,7 @@ def analyze_images():
     except Exception as e:
         print(f"画像分析中にエラーが発生しました: {e}")
         return jsonify({"error": "画像分析中にエラーが発生しました"}), 500
-
+        
 # 動画からフレームを切り出して、ローカルに保存する関数
 def save_frames(video_path: str, frame_dir: str, name="image", ext="jpg"):
     cap = cv2.VideoCapture(video_path)
@@ -354,11 +356,11 @@ def upload_file():
         
         if file:
             content_type = file.content_type
-            
+            print(f"Content type: {content_type}")
             # MIMEタイプに基づいて振り分け
             if content_type.startswith('image/'):
                 return process_image()
-            elif content_type.startswith('video/'):
+            elif content_type.startswith('video/') or content_type == 'application/octet-stream':
                 return process_video()
             else:
                 return jsonify({"error": "未対応のファイル形式です"}), 400
@@ -370,7 +372,6 @@ def upload_file():
     except Exception as e:
         print(f"ファイル処理中にエラーが発生しました: {e}")
         return jsonify({"error": "ファイルの処理中にエラーが発生しました"}), 500
-
 """
 ------------------------------------------------------------------
     以下、Blueskyのエンドポイント
