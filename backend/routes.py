@@ -225,7 +225,7 @@ def compress_image(image_data, max_size=(600, 600), quality=85):
     return compressed.tobytes()
 
 # 画像をBase64形式にエンコードする関数
-"""
+
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         compressed_image = compress_image(image_file.read())
@@ -234,6 +234,7 @@ def encode_image(image_path):
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
+"""
 # ollamaのllavaを用いて、画像を説明させる関数
 def analyze_image_with_ollama(image_path):
     base64_image = encode_image(image_path)
