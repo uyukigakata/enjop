@@ -1,37 +1,39 @@
-# SecHack365_4C_enjo Frontend
+# sechack365_4c_enjo_frontend
 
-このディレクトリは、SecHack365の表現駆動コース チーム4Cのフロントエンドのディレクトリです。
+This template should help get you started developing with Vue 3 in Vite.
 
-### セットアップ方法
+## Recommended IDE Setup
 
-```bash
-# まずはnode.jsをインストール
-# Install nvm (Node Version Manager)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-# Install node.js version 23 
-nvm install 23
-node -v
-npm -v
-# Install pnpm
-curl -fsSL https://get.pnpm.io/install.sh | sh -
-```
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-### プロジェクトのセットアップ
+## Type Support for `.vue` Imports in TS
 
-```bash
-pnpm install
-pnpm install vuex
-pnpm install axios
-# Run Development Server
-
-
-pnpm dev
-# Type-Check, Compile and Minify for Production
-pnpm build
-# Lint
-pnpm lint
-```
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
 
 ## Customize configuration
 
 See [Vite Configuration Reference](https://vite.dev/config/).
+
+## Project Setup
+
+```sh
+pnpm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
+pnpm dev
+```
+
+### Type-Check, Compile and Minify for Production
+
+```sh
+pnpm build
+```
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
+pnpm lint
+```
