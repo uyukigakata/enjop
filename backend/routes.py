@@ -283,11 +283,22 @@ def analyze_images():
             ],
         )
 
+        # result = {
+        #     "analysis_results": analysis_results,
+        #     "openai_risk_assessment": openai_response.choices[0].message['content'].strip()
+        # }
+        # print(result)
+        # return jsonify(result), 200
+        try:
+            openai_content = json.loads(openai_response.choices[0].message['content'].strip())
+        except json.JSONDecodeError as e:
+            print(f"JSONデコードエラー: {e}")
+            openai_content = {"error": "OpenAIレスポンスのフォーマットが不正"}
+
         result = {
             "analysis_results": analysis_results,
-            "openai_risk_assessment": openai_response.choices[0].message['content'].strip()
+            "openai_risk_assessment": openai_content
         }
-        print(result)
         return jsonify(result), 200
 
     except Exception as e:
