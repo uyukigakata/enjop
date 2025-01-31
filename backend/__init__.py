@@ -2,7 +2,6 @@ from flask import Flask,render_template,send_from_directory
 from flask_cors import CORS
 import os
 from backend.routes import video_processing_blueprint  # 相対インポートに変更
-from backend.routes import bluesky_blueprint
 
 def create_app():
     app = Flask(__name__)
