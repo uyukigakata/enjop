@@ -45,12 +45,20 @@ const uploadVideo = async () => {
       }
     })
     isAnalyzing.value = false
-    const risk_text = response.data.openai_risk_assessment as string
-    console.log(risk_text)
+
+    //const risk_text = response.data.openai_risk_assessment as string
+    const risk_object = response.data.openai_risk_assessment;
+    //console.log(risk_text)
+    console.log(risk_object)
+
     // remove ```json and ``` from the string
-    const risk_text_cleaned = risk_text.slice(7, risk_text.length - 3).replace(/\\n/g, '')
-    console.log(risk_text_cleaned)
-    responseMessage.value = JSON.parse(risk_text_cleaned)
+    //const risk_text_cleaned = risk_text.slice(7, risk_text.length - 3).replace(/\\n/g, '')
+    //console.log(risk_text_cleaned)
+
+
+
+    //responseMessage.value = JSON.parse(risk_text_cleaned)
+    responseMessage.value = risk_object
   } catch (error) {
     console.error(error)
     responseMessage.value = {
