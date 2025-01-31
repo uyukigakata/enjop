@@ -13,7 +13,6 @@ def create_app():
     
     # Blueprintの登録
     app.register_blueprint(video_processing_blueprint, url_prefix="/api")
-    app.register_blueprint(bluesky_blueprint, url_prefix="/api")
 
 
     # シンプルなテストルートを定義
