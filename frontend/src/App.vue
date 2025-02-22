@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!--<script setup lang="ts">
 import { ref } from 'vue'
 import axios from 'axios'
 import type { Response } from './model/ResponseModel'
@@ -85,7 +85,7 @@ function submitText() {
   <div class="flex items-center justify-center flex-col mt-8">
 
 
-    <p>1. テキストを入力</p>
+    <p>1. テキストを入力!!!hamo</p>
     <textarea v-model="text"
       class="mt-2 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
       style="height: 80px;"></textarea>
@@ -123,3 +123,12 @@ function submitText() {
     <FooterItem />
   </div>
 </template>
+-->
+
+
+<template>
+  <router-view></router-view>
+</template>
+
+<script setup lang="ts">
+</script>
