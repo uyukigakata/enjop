@@ -1,10 +1,11 @@
+
 <!--<script setup lang="ts">
 import { ref } from 'vue'
 import axios from 'axios'
-import type { Response } from './model/ResponseModel'
-import LawItem from './components/LawItem.vue'
 import FooterItem from './components/FooterItem.vue'
 import HeaderItem from './components/HeaderItem.vue'
+import LawItem from './components/LawItem.vue'
+import type { Response } from './model/ResponseModel'
 
 const isAnalyzing = ref(false)
 
@@ -54,7 +55,7 @@ const uploadVideo = async () => {
     responseMessage.value = JSON.parse(risk_text_cleaned)
 
 
-    
+
   } catch (error) {
     console.error(error)
     responseMessage.value = {
@@ -74,6 +75,26 @@ function submitText() {
   const tweetText = encodeURIComponent(text.value)
   const tweetUrl = `https://x.com/intent/tweet?text=${tweetText}`
   window.open(tweetUrl, '_blank')
+}
+
+async function postToBlueSkyWithVideo() {
+  if (!videoFile.value) return
+
+  const formData = new FormData()
+  formData.append('text', text.value)
+  formData.append('video', videoFile.value)
+
+  try {
+    const response = await axios.post('/bluesky_post_video', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    console.log(response.data)
+    alert('動画をBlueskyに投稿しました')
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 </script>
@@ -116,6 +137,12 @@ function submitText() {
     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2" @click="submitText">
       Xに投稿
     </button>
+
+    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2"
+      @click="postToBlueSkyWithVideo">
+      動画付きでBlueskyに投稿
+    </button>
+
   </div>
 
 
