@@ -45,12 +45,42 @@ const uploadVideo = async () => {
       }
     })
     isAnalyzing.value = false
+
     const risk_text = response.data.openai_risk_assessment as string
     console.log(risk_text)
+
+
     // remove ```json and ``` from the string
     const risk_text_cleaned = risk_text.slice(7, risk_text.length - 3).replace(/\\n/g, '')
     console.log(risk_text_cleaned)
-    responseMessage.value = JSON.parse(risk_text_cleaned)
+
+    // responseMessage.value = JSON.parse(risk_text_cleaned)
+    // **JSON.parse時のエラーハンドリング**
+    try {
+      const parsedData = JSON.parse(risk_text_cleaned);
+
+      // `laws` が null の場合は空配列を代入
+      if (!parsedData.laws) {
+        parsedData.laws = [];
+      }
+
+      // **laws内の各オブジェクトにデフォルト値を設定**
+      parsedData.laws = parsedData.laws.map((law: any) => ({
+      law_id: law.law_id ?? "N/A", // law_id がなければ "N/A"
+      law_name: law.law_name ?? "不明な法律", // law_name がなければ "不明な法律"
+      law_reason: law.law_reason ?? "理由なし", // law_reason がなければ "理由なし"
+      law_risk_level: law.law_risk_level ?? 0 // law_risk_level がなければ 0
+    }));
+
+      responseMessage.value = parsedData;
+    } catch (jsonError) {
+      console.error("JSON parse error:", jsonError);
+      responseMessage.value = {
+        laws: [],
+        comment: "解析結果を処理できませんでした",
+        rating: 0
+      };
+    }
   } catch (error) {
     console.error(error)
     responseMessage.value = {
