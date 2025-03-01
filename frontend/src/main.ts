@@ -8,8 +8,9 @@ createApp(App).mount('#app')
 
 import { createApp, defineAsyncComponent } from 'vue';
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import vuetify from './plugins/vuetify';
-import { createVuetify } from 'vuetify';
+//import vuetify from './plugins/vuetify'
+import { createVuetify } from 'vuetify'
+import 'vuetify/styles' 
 import App from './App.vue';
 
 // ルーティングの設定 (型を明示)
@@ -34,10 +35,15 @@ const app = createApp(App);
 
 // ルーターをアプリに登録
 app.use(router as any);
-app.use(createVuetify());
 
 // アプリをマウント
-app.mount('#app');
+const vuetify = createVuetify({
+  theme: {
+    defaultTheme: 'light'
+  }
+})
+export default vuetify;
+app.use(vuetify).mount("#app");
 
 /*
 import { createApp } from 'vue';

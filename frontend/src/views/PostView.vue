@@ -15,9 +15,17 @@
       </button>
     </div>
     
-      <LoadView v-if="isLoading" />
+      <v-container class="text-center" >
+        <v-progress-circular
+          v-if="isLoading"
+          indeterminate
+          color="blue"
+          :size =50
+          aria-label="ロード中"
+        ></v-progress-circular>
+      </v-container>
 
-      <v-dialog v-if="dialog" width="500" class="text-center" transition="dialog-bottom-transition" >
+      <v-dialog v-model="dialog" width="500" class="text-center" transition="dialog-bottom-transition" >
         <v-card class="enjo_dialog" :class="ratingClass" >
           <v-card-text>
             <p class="dialog_kanki">ちょっと待って! この動画、炎上するかも...</p>
@@ -46,18 +54,24 @@ import axios from 'axios'
 import { useRouter } from 'vue-router';
 import type { Response } from '../model/ResponseModel'
 import LoadView from './LoadView.vue';
+import { nextTick } from 'vue';
 
+import { useTheme } from 'vuetify';
+
+
+const theme = useTheme();
 
 const router = useRouter();
 
 //loading用のフラグ
 const isLoading = ref(false);
+
 //dialog用のフラグ
 const dialog = ref(false);
 
 const isAnalyzing = ref(false)
 
-const text = ref('')
+const text = ref('');
 
 const videoFile = ref<File | null>(null)
 
@@ -80,7 +94,6 @@ const responseMessage = ref<Response>({
   rating: 0
 })
 
-
 const onChooseFile = (e: Event) => {
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0] || null;
@@ -88,16 +101,17 @@ const onChooseFile = (e: Event) => {
 };
 
 const startUpload = async () => {
-  console.log("start isLoading",isLoading.value);
-  console.log("start dialog",dialog.value)
   //ロード開始
   isLoading.value = true;
+  console.log("start isLoading",isLoading.value);
+  console.log("start dialog",dialog.value)
   //アップロード
   await uploadVideo();
   //終了
   isLoading.value = false;
   //dialogを表示
   dialog.value=true;
+
   console.log("end isLoading",isLoading.value);
   console.log("end dialog",dialog.value)
 };
@@ -109,6 +123,8 @@ const uploadVideo = async () => {
   const formData = new FormData()
   formData.append('file', videoFile.value)
   formData.append('content_str', text.value)
+  console.log("file",videoFile.value);
+  console.log("content_str",text.value)
 
   try {
     isAnalyzing.value = true
@@ -129,7 +145,11 @@ const uploadVideo = async () => {
     console.log("responseMessage.value!!!!!!!!!!!!")
     console.log(responseMessage.value)
     //dialog表示
-    dialog.value = true;
+    isLoading.value = false;
+    //dialogを表示
+    dialog.value=true;
+    console.log("mid isLoading",isLoading.value);
+    console.log("mid dialog",dialog.value)
     
     //router.push({ path: '/result', query: {rating: responseMessage.value.rating } });
 
@@ -223,14 +243,14 @@ button:hover {
   text-align: center;
 }
 
-v-dialog{
-  margin-top:80px;
+v-dialog {
+  margin-top: 80px;
   text-align: center;
   display: flex;
   justify-content: center;
 }
 
-v-btn{
+v-btn {
   background-color: #B9BCFC;
   border: none;
   color: white;

@@ -1,34 +1,23 @@
 <template>
-    <div class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <div class="flex flex-col items-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-        <p class="mt-4 text-black">処理中...</p>
-      </div>
-    </div>
-  </template>
-  
-  <style scoped>
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-  
-  .spinner {
-    border: 5px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #09f;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  </style>
-  
+  <v-container class="text-center">
+    <v-progress-circular
+      indeterminate
+      color="blue"
+      size="64"
+    ></v-progress-circular>
+    <p class="mt-4 text-black text-h6">
+      現在のテーマ: {{ theme.global.name.value }}
+    </p>
+    <v-btn @click="toggleTheme">テーマ切り替え</v-btn>
+  </v-container>
+</template>
+
+<script setup lang="ts">
+  import { useTheme } from 'vuetify';
+
+  const theme = useTheme();
+
+  const toggleTheme = () => {
+    theme.global.name.value = theme.global.name.value === 'light' ? 'dark' : 'light';
+  };
+</script>
