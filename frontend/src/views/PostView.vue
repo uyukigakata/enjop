@@ -55,6 +55,8 @@ const isLoading = ref(false);
 //dialog用のフラグ
 const dialog = ref(false);
 
+const isAnalyzing = ref(false)
+
 const text = ref('')
 
 const videoFile = ref<File | null>(null)
@@ -109,12 +111,13 @@ const uploadVideo = async () => {
   formData.append('content_str', text.value)
 
   try {
+    isAnalyzing.value = true
     const response = await axios.post('/api/process_video', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
-
+    isAnalyzing.value = false
     // リスク取得
     const risk_text = response.data.openai_risk_assessment as string
     console.log("rist_text!!!!!!!!!!!!")
@@ -129,6 +132,33 @@ const uploadVideo = async () => {
     dialog.value = true;
     
     //router.push({ path: '/result', query: {rating: responseMessage.value.rating } });
+
+    // **JSON.parse時のエラーハンドリング**
+    try {
+      const parsedData = JSON.parse(risk_text_cleaned);
+
+      // `laws` が null の場合は空配列を代入
+      if (!parsedData.laws) {
+        parsedData.laws = [];
+      }
+
+      // **laws内の各オブジェクトにデフォルト値を設定**
+      parsedData.laws = parsedData.laws.map((law: any) => ({
+      law_id: law.law_id ?? "N/A", // law_id がなければ "N/A"
+      law_name: law.law_name ?? "不明な法律", // law_name がなければ "不明な法律"
+      law_reason: law.law_reason ?? "理由なし", // law_reason がなければ "理由なし"
+      law_risk_level: law.law_risk_level ?? 0 // law_risk_level がなければ 0
+    }));
+
+      responseMessage.value = parsedData;
+    } catch (jsonError) {
+      console.error("JSON parse error:", jsonError);
+      responseMessage.value = {
+        laws: [],
+        comment: "解析結果を処理できませんでした",
+        rating: 0
+      };
+    }
 
 
   } catch (error) {
