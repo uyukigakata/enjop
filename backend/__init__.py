@@ -3,7 +3,6 @@ from flask_cors import CORS
 import os
 from backend.routes import video_processing_blueprint  # 相対インポートに変更
 from backend.routes import bluesky_blueprint
-
 def create_app():
     app = Flask(__name__)
     CORS(app)  # CORSを有効化
@@ -13,8 +12,7 @@ def create_app():
     
     # Blueprintの登録
     app.register_blueprint(video_processing_blueprint, url_prefix="/api")
-    app.register_blueprint(bluesky_blueprint, url_prefix="/api")
-
+    app.register_blueprint(bluesky_blueprint,url_prefix="/api")
 
     # シンプルなテストルートを定義
     @app.route('/', defaults={'path': ''})
