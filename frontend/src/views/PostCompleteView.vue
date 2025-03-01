@@ -26,7 +26,7 @@
   
   <style scoped>
   html, body {
-    background-color: #EDFFFD; 
+    background-color: #9bf0e6; 
     margin: 0;
     padding: 0;
     height: 100%;
