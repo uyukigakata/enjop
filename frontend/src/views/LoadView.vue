@@ -2,7 +2,7 @@
     <div class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
       <div class="flex flex-col items-center">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-        <p class="mt-4 text-white">処理中...</p>
+        <p class="mt-4 text-black">処理中...</p>
       </div>
     </div>
   </template>

@@ -1,22 +1,23 @@
 <template>
-  <div class="flex items-center justify-center flex-col mt-8">
-    <p>1. テキストを入力</p>
-    <textarea v-model="text"
-      class="mt-2 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-      style="height: 80px;"></textarea>
-
-    <p class="mt-4">2. 動画ファイルをここにアップロード</p>
-    <input type="file" @change="onChooseFile"
-      class="mt-2 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
-    
-    <button @click="startUpload" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">
-      投稿
-    </button>
+  <div class="postView">
+    <div class="flex items-center justify-center flex-col mt-8">
+      <p>1. テキストを入力</p>
+      <textarea v-model="text"
+        class="mt-2 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+        style="height: 80px;"></textarea>
+      <div class="fileupload">
+        <p class="mt-4">2. 動画ファイルをここにアップロード</p>
+        <input type="file" @change="onChooseFile"
+        class="mt-2 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
+      </div>
+      <button @click="startUpload" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">
+        投稿
+      </button>
+    </div>
+  </div>
 
     <LoadView v-if="isLoading" />
-
-    
-    <v-dialog v-model="dialog" width="500">
+    <v-dialog  v-model="dialog" width="500">
       <v-card>
         <v-card-title class="text-h5 grey lighten-2">
           解析結果
@@ -40,7 +41,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  
 </template>
 
 <script setup lang="ts">
@@ -95,6 +96,8 @@ const startUpload = async () => {
   await uploadVideo();
   //終了
   isLoading.value = false;
+  //dialogを表示
+  dialog.value=true;
 };
 
 //動画アップロード
@@ -139,12 +142,40 @@ const uploadVideo = async () => {
 }
 
 const navigateToResult = () => {
-  router.push({ path: '/result', query: {rating: responseMessage.value.rating } });
+  //router.push({ path: '/result', query: {rating: responseMessage.value.rating } });
+  const lawsJson = JSON.stringify(responseMessage.value.laws);
+
+  router.push({
+    path: '/result',
+    query: {
+      rating: responseMessage.value.rating,
+      comment: responseMessage.value.comment,
+      laws: lawsJson, // Pass the serialized laws
+    },
+  });
 };
 
 
 </script>
 
 <style scoped>
-/* 必要に応じてスタイルを追加 */
+.postView{
+  text-align: center;
+}
+
+button {
+  background-color: #B9BCFC;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 120px;
+}
+
+button:hover {
+  background-color: #9196f8; /* ボタンホバー時の色 */
+}
+
 </style>

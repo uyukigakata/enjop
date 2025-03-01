@@ -1,23 +1,26 @@
 <template>
-  <div class="result min-h-screen" :class="ratingClass">
-    <div class="flex items-center justify-center flex-col mt-8">
-      <img src="./image/enjop_logo.png" alt="logo">
+  <div class="resultView">
+    <div class="result min-h-screen" :class="ratingClass">
+      <div class="flex items-center justify-center flex-col mt-8 w-full">
+        <img src="./image/enjop_logo.png" alt="logo">
+      </div>
+      <div class="enjo_rate">
+          <p>炎上レイト：{{ responseMessage.rating }}</p>
+          <p class="text-center text-xl">理由文</p>
+      </div>
+      <div>
+        <p class="mt-4 ml-4 mr-4 mb-4 p-4 rounded-lg bg-white">{{ responseMessage.comment }}</p>
+        <ul class="justify-center flex flex-wrap flex-col">
+          <li v-for="law in responseMessage.laws" :key="law.law_id" class="w-full mb-4">
+            <div class="m-4 ml-8 mr-8 p-4 border-2 border-gray-300 rounded-lg shadow-md bg-white">
+              <LawItem :law="law" />
+            </div>
+          </li>
+        </ul>
+      </div>
+      <button class="toConfirmPost" @click="navigateToConfirmPost">投稿する</button>
     </div>
-    <div class="enjo_rate">
-        <p>炎上レイト：{{ responseMessage.rating }}</p>
-        <p class="text-center text-xl">理由文</p>
-    </div>
-
-    <div class="mt-8 border-2 border-gray-300 p-4 mx-4 my-4">
-      <p class="mt-4">{{ responseMessage.comment }}</p>
-      <ul class="justify-center flex flex-wrap flex-col">
-        <li v-for="law in responseMessage.laws" :key="law.law_id">
-          <LawItem :law="law" />
-        </li>
-      </ul>
-    </div>
-    <button class="toConfirmPost" @click="navigateToConfirmPost">投稿する</button>
-  </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -49,6 +52,7 @@ onMounted(() => {
   console.log("route.query.laws:", route.query.laws);
   responseMessage.value.rating = Number(route.query.rating) || 2;
   responseMessage.value.comment =  String(route.query.comment || "データなし");
+  console.log(responseMessage.value.comment);
   
   if (route.query.laws) {
     try {
@@ -70,6 +74,9 @@ const navigateToConfirmPost = () => {
 </script>
 
 <style scoped>
+.resultView{
+  text-align: center;
+}
 .min-h-screen {
   min-height: 100vh;
   justify-content: center;
