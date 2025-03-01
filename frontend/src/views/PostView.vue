@@ -14,34 +14,30 @@
         投稿
       </button>
     </div>
-  </div>
+    
+      <LoadView v-if="isLoading" />
 
-    <LoadView v-if="isLoading" />
-    <v-dialog  v-model="dialog" width="500">
-      <v-card>
-        <v-card-title class="text-h5 grey lighten-2">
-          解析結果
-        </v-card-title>
+      <v-dialog v-if="dialog" width="500" class="text-center" transition="dialog-bottom-transition" >
+        <v-card class="enjo_dialog" :class="ratingClass" >
+          <v-card-text>
+            <p class="dialog_kanki">ちょっと待って! この動画、炎上するかも...</p>
+            <p>リスク評価: {{ responseMessage.rating }}</p>
+          </v-card-text>
+          <v-divider></v-divider>
 
-        <v-card-text>
-          <p>{{ responseMessage.comment }}</p>
-          <p>リスク評価: {{ responseMessage.rating }}</p>
-        </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" @click="navigateToResult" >
-            詳しく見る
-          </v-btn>
-          <v-btn color="grey" @click="dialog = false">
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
+          <v-card-actions class="cardActions">
+            <v-spacer></v-spacer>
+            <img src="./image/enjop_logo.png" height="90" alt="logo">
+            <v-btn color="blue darken-1" @click="navigateToResult">
+              詳しく見る
+            </v-btn>
+          </v-card-actions>
+        </v-card>
     </v-dialog>
-  
+    
+
+    
+</div>
 </template>
 
 <script setup lang="ts">
@@ -90,6 +86,8 @@ const onChooseFile = (e: Event) => {
 };
 
 const startUpload = async () => {
+  console.log("start isLoading",isLoading.value);
+  console.log("start dialog",dialog.value)
   //ロード開始
   isLoading.value = true;
   //アップロード
@@ -98,6 +96,8 @@ const startUpload = async () => {
   isLoading.value = false;
   //dialogを表示
   dialog.value=true;
+  console.log("end isLoading",isLoading.value);
+  console.log("end dialog",dialog.value)
 };
 
 //動画アップロード
@@ -155,6 +155,9 @@ const navigateToResult = () => {
   });
 };
 
+const ratingClass = computed(() => {
+  return `bg-rate${responseMessage.value.rating}`;
+});
 
 </script>
 
@@ -177,5 +180,56 @@ button {
 button:hover {
   background-color: #9196f8; /* ボタンホバー時の色 */
 }
+
+.enjo_dialog {
+  display: flex;
+  flex-direction: row; /* Arrange child components horizontally */
+  justify-content: space-between; /* Distribute space between the components */
+  align-items: center;
+}
+
+.dialog_kanki {
+  font-size: 20px;
+  text-align: center;
+}
+
+v-dialog{
+  margin-top:80px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+v-btn{
+  background-color: #B9BCFC;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 120px;
+}
+button:hover {
+  background-color: #9196f8; /* ボタンホバー時の色 */
+}
+
+.cardActions {
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-rate1 { background-color: #F5F5F5; }
+.bg-rate2 { background-color: #55D555; }
+.bg-rate3 { background-color: #DBF6AF; }
+.bg-rate4 { background-color: #FDF9B4; }
+.bg-rate5 { background-color: #FF914D; }
+.bg-rate6 { background-color: #FF66C4; }
+.bg-rate7 { background-color: #FF7466; }
+.bg-rate8 { background-color: #EF3223; }
+.bg-rate9 { background-color: #8D0A0A; }
+.bg-rate10 { background-color: #10000E; }
+
+
 
 </style>
