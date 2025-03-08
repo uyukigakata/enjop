@@ -162,7 +162,7 @@ const uploadVideo = async () => {
     try {
         isAnalyzing.value = true
         // デバッグ用に一時的に削除
-        /*const response = await axios.post('/api/process_video', formData, {
+        const response = await axios.post('/api/process_video', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -177,7 +177,7 @@ const uploadVideo = async () => {
         const risk_text_cleaned = risk_text.replace(/\\n/g, ''); // 改行コードを削除するだけ
         responseMessage.value = JSON.parse(risk_text_cleaned)
         console.log("responseMessage.value!!!!!!!!!!!!")
-        console.log(responseMessage.value)*/
+        console.log(responseMessage.value)
         //dialog表示
         isLoading.value = false;
         //dialogを表示
@@ -189,7 +189,7 @@ const uploadVideo = async () => {
 
         // **JSON.parse時のエラーハンドリング**
         // デバッグ用に一時的に削除
-        /*try {
+        try {
             const parsedData = JSON.parse(risk_text_cleaned);
 
             // `laws` が null の場合は空配列を代入
@@ -213,7 +213,7 @@ const uploadVideo = async () => {
                 comment: "解析結果を処理できませんでした",
                 rating: 0
             };
-        }*/
+        }
     } catch (error) {
         console.error(error)
         responseMessage.value = {
