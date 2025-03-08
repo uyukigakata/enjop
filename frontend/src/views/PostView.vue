@@ -270,11 +270,11 @@ button:hover {
 }
 
 .bg-rate1 { background-color: #F5F5F5; }
-.bg-rate2 { background-color: #55D555; }
-.bg-rate3 { background-color: #DBF6AF; }
-.bg-rate4 { background-color: #FDF9B4; }
-.bg-rate5 { background-color: #FF914D; }
-.bg-rate6 { background-color: #FF66C4; }
+.bg-rate2 { background-color: #058605; }
+.bg-rate3 { background-color: #55d555; }
+.bg-rate4 { background-color: #a6f6a6; }
+.bg-rate5 { background-color: #bafafa; }
+.bg-rate6 { background-color: #fffd30; }
 .bg-rate7 { background-color: #FF7466; }
 .bg-rate8 { background-color: #EF3223; }
 .bg-rate9 { background-color: #8D0A0A; }
